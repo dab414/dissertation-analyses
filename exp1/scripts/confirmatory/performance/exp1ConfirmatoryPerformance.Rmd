@@ -1,0 +1,264 @@
+---
+title: "Experiment 1 Confirmatory Performance Analyses"
+author: "Dave Braun"
+date: "July 22, 2019"
+output: 
+  html_document:
+    code_folding: hide
+    df_print: paged
+    includes:
+      after_body: footer.html
+knit:
+  (function(inputFile, encoding) {
+      rmarkdown::render(inputFile,
+                    encoding = encoding,
+                    output_file = 'index.html')})
+---
+
+```{r includes = FALSE}
+library(tidyverse)
+library(ez)
+source('../../formatSimpleEffects.r')
+```
+
+This document is dedicated to conducting the confirmatory performance analyses that were proposed for Experiment 1.
+
+# Design and Predictions
+**Design.** The design and analysis is a 2 (difficulty: harder than reference vs. easier than reference) X 2 (difference: moderate vs. extreme) X 2 (transition: repeat vs. switch) within-subjects ANOVA on RTs and error rates.  
+**Predictions.** There are predicted main effects of difficulty (easier deck has faster RTs and more errors than harder), and transition (typical switch cost). There is a predicted two-way interaction between difference and difficulty, such that harder decks are associated with slower RTs. There is another predicted two-way interaction between transition and difficulty, such that switch costs are expected to be greater for decks that are easier than reference. Finally, there is a predicted three-way interaction, where switch costs are expected to be larger for easier relative to harder decks. This is because switching tends to be more costly when it is done more infrequently.
+
+
+
+# Results
+
+## Response Times
+Below is the cleaned data:
+```{r}
+d <- read.csv('../../../data/dstClean.csv')
+d <- d %>% 
+  filter(transition != 'startBlock')
+n <- d %>% 
+  group_by(subject) %>% 
+  summarize(n()) %>% 
+  nrow(.)
+d
+```
+**The sample size is `r n`.**
+
+### Visualize the Results
+
+```{r}
+cellMeans <- d %>% 
+  filter(transition != 'startBlock') %>% 
+  group_by(subject, difference, difficulty, transition) %>% 
+  summarize(mrt = mean(cuedRt)) %>% 
+  group_by(difference, difficulty, transition) %>% 
+  summarize(rt = mean(mrt), se = sd(mrt) / sqrt(n())) 
+cellMeans
+cellMeans %>% 
+  ggplot(aes(x = difference, y = rt, group = transition)) + 
+  geom_bar(stat = 'identity', aes(fill = transition), color = 'black', position = position_dodge(width = 0.9)) + 
+  geom_errorbar(aes(ymin = rt - se, ymax = rt + se), position = position_dodge(width = 0.9), width = 0.5) + 
+  facet_wrap(~difficulty) + 
+  theme_bw() +
+  xlab('Transition Type') + 
+  ylab('Response Time (ms)') + 
+  scale_fill_manual(name = 'Transition', values = c(`repeat` = 'Light Grey', switch = 'Black')) +
+  theme(strip.background = element_rect(color = 'black', fill = 'white'),
+        legend.position = 'top')
+```
+
+
+### Statistics
+**Subject-wise cell means**
+```{r}
+d %>% 
+  group_by(subject, difference, difficulty, transition) %>% 
+  summarize(rt = mean(cuedRt)) 
+  
+```
+
+**Omnibus Model**
+```{r}
+m1 <- ezANOVA(wid = subject, within = .(difference, difficulty, transition), dv = cuedRt, data = d, detailed = TRUE)
+cs <- c(colnames(m1$ANOVA), 'n2p')
+omni <- cbind(m1, data.frame(n2p = m1$ANOVA$SSn / (m1$ANOVA$SSn + m1$ANOVA$SSd)))
+colnames(omni) <- cs
+omni
+```
+
+**Planned Comparisons**
+
+Difficulty X Difference 
+```{r}
+## difficulty X difference
+DFd <- m1$ANOVA$DFd[5]
+SSd <- m1$ANOVA$SSd[5]
+MSe <- SSd / DFd
+
+omnibusParams <- c('DFd' = DFd, 'SSd' = SSd, 'MSe' = MSe)
+
+d %>% 
+  group_by(subject, difference, difficulty) %>% 
+  summarize(mrt = mean(cuedRt)) %>% 
+  group_by(difference, difficulty) %>% 
+  summarize(rt = mean(mrt), se = sd(mrt) / sqrt(n())) 
+
+m2 <- ezANOVA(wid = subject, within = difference, dv = cuedRt, data = d[d$difficulty == 'Easier than Reference',], detailed = TRUE)
+
+easier <- formatSimpleEffects(m2, omnibusParams)
+
+m2 <- ezANOVA(wid = subject, within = difference, dv = cuedRt, data = d[d$difficulty == 'Harder than reference',], detailed = TRUE)
+harder <- formatSimpleEffects(m2, omnibusParams)
+
+data.frame(Contrast = c('Simple effect of difference for Easier than Reference', 'Simple effect of difference for Harder than Reference'),
+           Result = c(easier, harder))
+```
+
+Transition X Difficulty
+
+```{r}
+DFd <- m1$ANOVA$DFd[7]
+SSd <- m1$ANOVA$SSd[7]
+MSe <- SSd / DFd
+
+d %>% 
+  group_by(subject, transition, difficulty) %>% 
+  summarize(mrt = mean(cuedRt)) %>% 
+  group_by(transition, difficulty) %>% 
+  summarize(rt = mean(mrt), se = sd(mrt) / sqrt(n())) 
+
+m2 <- ezANOVA(wid = subject, within = transition, dv = cuedRt, data = d[d$difficulty == 'Easier than Reference',], detailed = TRUE)
+
+easier <- formatSimpleEffects(m2, omnibusParams)
+
+m2 <- ezANOVA(wid = subject, within = transition, dv = cuedRt, data = d[d$difficulty == 'Harder than reference',], detailed = TRUE)
+harder <- formatSimpleEffects(m2, omnibusParams)
+
+data.frame(Contrast = c('Simple effect of transition for Easier than Reference', 'Simple effect of transition for Harder than Reference'),
+           Result = c(easier, harder))
+```
+
+
+I'll deal with the three-way only if I need to.
+
+
+## Error Rates
+Below is the cleaned data:
+```{r}
+d <- read.csv('../../../data/dstCleanErrors.csv')
+d <- d %>% 
+  filter(transition != 'startBlock')
+d
+```
+
+### Visualize the Results
+
+```{r}
+cellMeans <- d %>% 
+  filter(transition != 'startBlock') %>% 
+  group_by(subject, difference, difficulty, transition) %>% 
+  summarize(merror = mean(error)) %>% 
+  group_by(difference, difficulty, transition) %>% 
+  summarize(error = mean(merror), se = sd(merror) / sqrt(n())) 
+cellMeans
+cellMeans %>% 
+  ggplot(aes(x = difference, y = error, group = transition)) + 
+  geom_bar(stat = 'identity', aes(fill = transition), color = 'black', position = position_dodge(width = 0.9)) + 
+  geom_errorbar(aes(ymin = error - se, ymax = error + se), position = position_dodge(width = 0.9), width = 0.5) + 
+  facet_wrap(~difficulty) + 
+  theme_bw() +
+  xlab('Transition Type') + 
+  ylab('Error Rate') + 
+  scale_fill_manual(name = 'Transition', values = c(`repeat` = 'Light Grey', switch = 'Black')) +
+  theme(strip.background = element_rect(color = 'black', fill = 'white'),
+        legend.position = 'top')
+```
+
+
+### Statistics
+**Subject-wise cell means**
+```{r}
+d %>% 
+  group_by(subject, difference, difficulty, transition) %>% 
+  summarize(error = mean(error)) 
+  
+```
+
+**Omnibus Model**
+```{r}
+m1 <- ezANOVA(wid = subject, within = .(difference, difficulty, transition), dv = error, data = d, detailed = TRUE)
+cs <- c(colnames(m1$ANOVA), 'n2p')
+omni <- cbind(m1, data.frame(n2p = m1$ANOVA$SSn / (m1$ANOVA$SSn + m1$ANOVA$SSd)))
+colnames(omni) <- cs
+omni
+```
+
+**Planned Comparisons**
+
+Difficulty X Difference 
+```{r}
+## difficulty X difference
+DFd <- m1$ANOVA$DFd[5]
+SSd <- m1$ANOVA$SSd[5]
+MSe <- SSd / DFd
+
+omnibusParams <- c('DFd' = DFd, 'SSd' = SSd, 'MSe' = MSe)
+
+d %>% 
+  group_by(subject, difference, difficulty) %>% 
+  summarize(mrt = mean(cuedRt)) %>% 
+  group_by(difference, difficulty) %>% 
+  summarize(rt = mean(mrt), se = sd(mrt) / sqrt(n())) 
+
+m2 <- ezANOVA(wid = subject, within = difference, dv = error, data = d[d$difficulty == 'Easier than Reference',], detailed = TRUE)
+
+easier <- formatSimpleEffects(m2, omnibusParams)
+
+m2 <- ezANOVA(wid = subject, within = difference, dv = error, data = d[d$difficulty == 'Harder than reference',], detailed = TRUE)
+harder <- formatSimpleEffects(m2, omnibusParams)
+
+data.frame(Contrast = c('Simple effect of difference for Easier than Reference', 'Simple effect of difference for Harder than Reference'),
+           Result = c(easier, harder))
+```
+
+
+
+Transition X Difficulty
+
+```{r}
+DFd <- m1$ANOVA$DFd[7]
+SSd <- m1$ANOVA$SSd[7]
+MSe <- SSd / DFd
+
+d %>% 
+  group_by(subject, transition, difficulty) %>% 
+  summarize(mrt = mean(cuedRt)) %>% 
+  group_by(transition, difficulty) %>% 
+  summarize(rt = mean(mrt), se = sd(mrt) / sqrt(n())) 
+
+m2 <- ezANOVA(wid = subject, within = transition, dv = error, data = d[d$difficulty == 'Easier than Reference',], detailed = TRUE)
+
+easier <- formatSimpleEffects(m2, omnibusParams)
+
+m2 <- ezANOVA(wid = subject, within = transition, dv = error, data = d[d$difficulty == 'Harder than reference',], detailed = TRUE)
+harder <- formatSimpleEffects(m2, omnibusParams)
+
+data.frame(Contrast = c('Simple effect of transition for Easier than Reference', 'Simple effect of transition for Harder than Reference'),
+           Result = c(easier, harder))
+```
+
+
+I'll deal with the three-way only if I need to.
+
+
+
+
+
+
+
+
+
+
+
+

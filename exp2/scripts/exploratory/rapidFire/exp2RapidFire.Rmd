@@ -1,0 +1,163 @@
+---
+title: "Rapid Fire Choice Analyses"
+author: "Dave Braun"
+date: "7/21/2019"
+output: 
+  html_document:
+    code_folding: hide
+    df_print: paged
+    includes:
+      after_body: footer.html
+knit:
+  (function(inputFile, encoding) {
+      rmarkdown::render(inputFile,
+                    encoding = encoding,
+                    output_file = 'index.html')})
+---
+```{r include = FALSE}
+library(tidyverse)
+library(ggridges)
+```
+```{r include = FALSE, eval = FALSE}
+setwd('/home/dave/OneDrive/Research/By Project/Dissertation/experiments/analysis/exp2/scripts/exploratory/rapidFire/')
+```
+
+
+*This document was last updated at `r Sys.time()`.*
+
+This document is dedicated to exploring the Experiment 2 choice data from the rapid fire phase against that from the demand selection task phase. The general purpose is to assess whether or not this choice data is usable.  
+
+Load and view the rapid fire data:
+
+```{r}
+dst <- read.csv('../../../data/dstClean.csv')
+rapidFire <- read.csv('../../../data/rapidFireClean.csv')
+rapidFire
+```
+
+
+## Rapid Fire
+
+In the document I said that I would drop all subjects with a mean choice RT longer than 1 s, which seems kinda dumb in retrospect because I would *expect* RTs to be under this. Let's compare the rt distributions for each subject:
+
+```{r}
+dst %>% 
+  select(subject, choiceRt) %>% 
+  rename(dstChoiceRt = choiceRt) %>% 
+  inner_join(rapidFire) %>% 
+  rename(rfChoiceRt = choiceRt) %>% 
+  select(subject, rfChoiceRt, dstChoiceRt) %>% 
+  gather(phase, rt, rfChoiceRt, dstChoiceRt) %>% 
+  filter(rt < 5000) %>% 
+  mutate(subject = as.factor(subject)) %>% 
+  ggplot(aes(x = rt, y = subject)) + 
+  ## scale controls how much the densities overlap -- higher numbers = more overlap
+  geom_density_ridges(aes(fill = phase), alpha = 0.8, color = 'white', scale = 1.3) +
+  scale_fill_cyclical(name = 'Phase',  
+                      labels = c(`dstChoiceRt` = 'Demand Selection Task', `rfChoiceRt` = 'Rapid Fire'), 
+                      values = c('#ff0000', '#0000ff', '#ff8080', '#8080ff'), guide = 'legend') + 
+  theme_ridges(grid = FALSE) +
+  labs(
+    x = 'Response Time (ms)',
+    y = 'Subject',
+    title = 'Response times across the two choice phases of the experiment',
+    subtitle = 'Are people just spamming their way through the rapid fire choices?'
+  ) +
+  theme(legend.position = 'bottom')
+```
+
+I can also try to get a sense of whether people are spamming through the rapid fire by looking at proportion selection of left / right deck throughout the phase.
+
+```{r}
+rapidFire %>% 
+  mutate(rfChoice = ifelse(selectedDeckLocation == 'right', 1, 0)) %>% 
+  select(subject, rfChoice) %>% 
+  inner_join(dst) %>% 
+  mutate(dstChoice = ifelse(selectedDeckLocation == 'right', 1, 0),
+         subject = as.factor(subject)) %>% 
+  gather(phase, isRight, rfChoice, dstChoice) %>% 
+  mutate(phase = as.factor(phase)) %>% 
+  mutate(phase = recode(phase, 'dstChoice' = 'Demand Selection Phase', 'rfChoice' = 'Rapid Fire Phase')) %>% 
+  group_by(subject, phase) %>% 
+  summarize(right = mean(isRight), sd = sd(isRight)) %>% 
+  ggplot(aes(x = subject, y = right)) + 
+  geom_point(size = 3, shape = 18) +
+  #geom_errorbar(aes(ymin = right - sd, ymax = right + sd), width = 0.2) + 
+  geom_hline(yintercept = 0.5, linetype = 'dashed') + 
+  facet_wrap(~phase) +
+  theme_bw() + 
+  coord_flip() +
+  ylim(0, 1) +
+  labs(
+    x = 'Subject',
+    y = 'Proportion Selection of Right Deck',
+    title = 'Choice location bias across choice phases'
+  )
+```
+
+```{r}
+rapidFire %>% 
+  mutate(isRight = ifelse(selectedDeckLocation == 'right', 1, 0)) %>% 
+  group_by(subject) %>% 
+  summarize(right = mean(isRight), se = sd(isRight) / sqrt(n()), n = n())
+```
+
+
+Let's look at choice RT in rapid fire over time. Maybe people start out thinking about it for longer and then get frustrated toward the end.
+
+```{r}
+a <- rapidFire %>% 
+  select(subject, choiceRt, choiceTrial) %>% 
+  mutate(phase = 'Rapid Fire Phase')
+
+b <- dst %>% 
+  select(subject, choiceRt, choiceTrial) %>% 
+  mutate(phase = 'Demand Selection Phase')
+
+plotData <- rbind(a, b)
+
+plotData %>% 
+  ggplot(aes(x = choiceTrial, y = choiceRt, group = subject)) +
+  geom_line() +
+  xlim(0, 40)+
+  facet_wrap(~phase) +
+  labs(
+    title = 'Choice response time over trial across the two choice phases',
+    subtitle = 'Are people starting off slower and getting faster?',
+    x = 'Trial',
+    y = 'Response Time (ms)',
+    caption = 'Each line represents a different subject'
+  ) +
+  theme_bw() +
+  theme(strip.background = element_rect(fill = 'white', color = 'black'))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

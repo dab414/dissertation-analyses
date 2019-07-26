@@ -1,0 +1,21 @@
+7/22/2019
+  preparation for day 1 of data collection:
+    finish data pipeline
+    make an analysis homepage
+      which links to the different sub analysis pages
+    don't forget to drop sandbox data from the pipeline
+      done
+    implement an rsync in ./downloadAndProcess instead of downloading every time
+      done
+
+    code up a quickSum.py that i can call from local
+      done sort of
+      used shortcuts instead, too complicated otherwise
+
+  alright, it's go time
+
+  sub journal:
+    16:04
+      4 total HITs active
+      all assignments for all hits got scooped up p much immediately
+      very few inits on the server, though

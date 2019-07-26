@@ -1,0 +1,142 @@
+---
+title: "Experiment 1 Timing Assessment"
+author: "Dave Braun"
+date: "July 3, 2019"
+output: 
+  html_document:
+    code_folding: hide
+---
+
+This document is dedicated to estimating the trial thresholds for Experiment 1. I ran through a short version of the study myself, and I'm going to use my timing information to draw rough estimates about what the trial thresholds should be.  
+
+Unlike previous rVTS studies I've run on MTurk, timing shouldn't depend much on performance, so I expect the between-subject variability in finishing time to be low.
+
+```{r include=FALSE}
+## sample code
+library(tidyverse)
+```
+
+## Cued Task Switching
+We need to know how many trials of cued task switching equals about five minutes.
+
+```{r}
+d <- read.csv('../../../data/pracCued.csv')
+head(d)
+```
+
+Creating an estimate of time by adding RT on to trial count weighted by the 500 RSI (ie, `totalTime <- sum(RT) + nTrials * 500)`
+
+```{r}
+totalTime <- (sum(d$rt) + nrow(d) * 500) / 1000
+print(paste(nrow(d), 'trials.'))
+print(paste(round(totalTime,2), 'seconds.'))
+```
+
+So then: `30 trials / 33.91 s = X trials / 5 min * 60`
+
+```{r}
+targetTrials <- (30*300) / 33.91
+print(paste(round(targetTrials, 2), 'trials will be needed'))
+```
+
+Seems like a bit much, but maybe that is the number of trials it'll take. I might tone this down to 3 min to leave more time for the important data collection.  
+
+### Estimating from previous MTurk cued task data
+I remembered I had run cued task switching on MTurk in the fall of 2018. Let's see whether trial estimates from that data converge with mine from above.  
+
+I dug up the old html scripts for that study and saw that the cued phase ran for 160 trials. There's also a variable called `finishTime`, which is the time at the end of the phase subtracted from their landing on the cued html. So this time will include time spent watching instructions, which was 3 min 14 sec.  
+
+*Note: the `finishTime` seems to be incorrectly calculated as `finishTime = (new Date() - startExpTime) - 1000;`, looks like I subtracted a millisecond when I meant to divide.*
+
+```{r}
+d <- read.csv('../../../../../../../switch_experiments/mturk_studies/foraging/data/cued_full.csv')
+colnames(d) <- tolower(colnames(d))
+head(d)
+
+d$finishTimeMins <- (d$finishtime + 1000) / 1000 / 60
+```
+```{r}
+d <- d %>% 
+  group_by(workerid) %>% 
+  summarize(dummy = n()) %>% 
+  mutate(subject = 1:(nrow(.))) %>% 
+  select(-dummy) %>% 
+  inner_join(d)
+
+s <- d %>% 
+  group_by(subject) %>% 
+  summarize(finishTimeMins = mean(finishTimeMins))
+
+hist(s$finishTimeMins, xlab = 'Cued Phase Runtime (mins)', main = '')
+```
+
+```{r}
+print(c('Mean Runtime (mins)' = mean(s$finishTimeMins), 'SD Runtime (mins)' = sd(s$finishTimeMins)))
+```
+I'll do another summary calculating runtime from RTs and CTIs / RCIs.  
+
+```{r}
+s <- d %>% 
+  group_by(subject) %>% 
+  summarize(sumRt = sum(rt), count = n())
+
+badSubjects <- s[s$count < 160, ]$subject
+
+s <- s[!(s$subject %in% badSubjects),]
+
+s$runTimeMins <- (s$sumRt + (1100 * 160)) / 1000 / 60
+hist(s$runTimeMins, xlab = 'Cued Phase Runtime (mins)', main = '')
+print(c('Mean Runtime (mins)' = mean(s$runTimeMins), 'SD Runtime (mins)' = sd(s$runTimeMins)))
+```
+
+This suggests to me that 160 trials puts us right around the 5 min mark on average. I'll start there for the pilots then.
+
+## Demand Selection Task
+
+```{r}
+d <- read.csv('../../../data/dst.csv')
+head(d)
+```
+
+
+Looks like we have a block time saved in the data. I'll just summarize over that.
+
+
+```{r}
+d %>% 
+  summarize('Block Time' = mean(blockTime), 'Block Time SD' = sd(blockTime))
+
+d %>% 
+  filter(block == 1) %>% 
+  summarize('Trial Count Per Block' = n())
+```
+
+Sixty trials equals about 33 s with pretty low variability. We want eight total blocks and total run time to be 25 min. 
+
+```{r}
+targetPerBlock <- (25 * 60) / 8
+print(paste(targetPerBlock, 'seconds per block is what we want.'))
+```
+
+So `60 trials / 33 s = X trials / 187.5 s`
+
+```{r}
+targetTrials <- (60 * 187.5) / 33
+print(paste("We'll want", round(targetTrials), 'trials per block.'))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

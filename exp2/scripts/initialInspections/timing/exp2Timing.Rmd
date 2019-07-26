@@ -1,0 +1,50 @@
+---
+title: "Experiment 2 Timing Assessment"
+author: "Dave Braun"
+date: "July 3, 2019"
+output: 
+  html_document:
+    code_folding: hide
+---
+
+This document is dedicated to determining how many cycles of four trials (all conditions) will be needed to reach about 25 mins.  
+
+I performed a full cycle (performed each condition once) and I'll extrapolate based on the overall finishing time of this one phase.   
+
+(I'm assuming the cued task switching trial threshold calculated from Experiment 1 will also be appropriate for Experiment 2)
+
+```{r include = FALSE}
+library(tidyverse)
+```
+
+```{r}
+d <- read.csv('../../../data/dst.csv')
+head(d)
+```
+
+
+
+```{r}
+print(paste('Phase run time:', round(max(d$phaseRunTime)/1000, 2), 'seconds'))
+```
+
+
+```{r}
+print(paste('Total target cycles:', round((25*60) / 90.26)))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

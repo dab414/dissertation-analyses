@@ -1,0 +1,268 @@
+---
+title: "Experiment 1 Preprocessing"
+author: "Dave Braun"
+date: "7/21/2019"
+output: 
+  html_document:
+    #code_folding: hide
+    df_print: paged
+knit:
+  (function(inputFile, encoding) {
+      rmarkdown::render(inputFile,
+                    encoding = encoding,
+                    output_file = 'index.html')})
+---
+```{r include = FALSE}
+library(tidyverse)
+library(data.table)
+library(ggExtra)
+```
+```{r include = FALSE, eval = FALSE}
+setwd('/home/dave/OneDrive/Research/By Project/Dissertation/experiments/analysis/exp1/scripts/preprocessing/')
+```
+
+
+
+This document is dedicated to cleaning the data from Experiment 1.  
+
+Load and view the data:
+
+```{r}
+d <- read.csv('../../data/dst.csv')
+
+demo <- read.csv('../../data/demo.csv')
+
+n <- d %>% 
+  group_by(subject) %>% 
+  summarize(n()) %>% 
+  nrow()
+
+d
+```
+
+**Initial sample size is `r n`**.
+
+## Subject Exclusion
+Subjects will be excluded for:  
+
+* Committing errors on more than 15% of trials    
+* Not having normal or corrected-to-normal vision
+
+```{r}
+badSubjectsList <- demo[demo$vision == 'impaired',]$subject
+badSubjects <- data.frame(subject = badSubjectsList, reason = rep('Vision Impaired', length(badSubjectsList)))
+
+badSubjectsList <- d %>% 
+  group_by(subject) %>% 
+  summarize(error = mean(error)) 
+
+badSubjectsList %>% 
+  ggplot(aes(x = error)) +
+  geom_histogram(color = 'black', fill = 'light grey') + 
+  theme_bw() +
+  xlab('Error Rate')
+  
+badSubjectsList <- badSubjectsList %>% 
+  filter(error > .15)
+
+badSubjects <- rbind(badSubjects, data.frame(subject = badSubjectsList$subject, reason = rep('Error rate higher than 15%', nrow(badSubjectsList))))
+
+badSubjects
+```
+
+So we have a shocking number of subjects who are just making random responses. I'm making a criterion for rejecting HITs, which is error rates higher than 35% or mean cued RTs lower than 400. These two vars are a clear diagnostic between people who are and aren't doing the task correctly.  
+
+On second thought, I think we have a bot problem...
+
+```{r}
+good <- d %>% 
+  filter(cuedRt < 10000) %>% 
+  group_by(subject) %>%
+  summarize(error = mean(error), rt = mean(cuedRt)) %>% 
+  filter(error < .35)
+
+bad <- d %>% 
+  filter(cuedRt < 10000) %>% 
+  group_by(subject) %>%
+  summarize(error = mean(error), rt = mean(cuedRt)) %>% 
+  filter(error > .35)
+
+```
+Good performers:
+
+```{r}
+good
+```
+Bad Performers:
+```{r}
+bad
+```
+
+```{r}
+source('../identitiesAndRejections/computeRejectList.r')
+```
+That saves to a private CSV, which I'll use to reject assignments.
+
+Let's have a bit of fun with this real quick:
+
+```{r}
+rejectList <- read.csv('../identitiesAndRejections/rejectList.csv')
+
+p <- d %>%
+  mutate(isBot = ifelse(subject %in% rejectList$subject, 'Bot', 'Human')) %>% 
+  filter(cuedRt < 10000) %>% 
+  group_by(subject) %>% 
+  summarize(error = mean(error), rt = mean(cuedRt), isBot = unique(isBot)) %>% 
+  ggplot(aes(x = error, y = rt, color = isBot)) +
+  geom_point() +
+  scale_color_manual(name = 'Turing Test', values = c(Bot = 'red', Human = 'dark green')) +
+  xlab('Mean Error Rate') +
+  ylab('Mean Cued Response Time (ms)') + 
+  theme_bw() +
+  theme(legend.position = 'bottom')
+ggMarginal(p = p, type = 'histogram', groupFill = TRUE)
+
+
+```
+
+
+Drop bad data
+
+```{r}
+print(paste('Number of rows before removing bad subjects:', nrow(d)))
+d <- d[!(d$subject %in% badSubjects$subject),]
+print(paste('Number of rows after removing bad subjects:', nrow(d)))
+
+demo <- demo[!(demo$subject %in% badSubjects$subject),]
+```
+
+Zoom in on everyone else:
+
+```{r}
+d %>% 
+  group_by(subject) %>% 
+  summarize(error = mean(error)) %>% 
+  ggplot(aes(x = error)) +
+  geom_histogram(color = 'black', fill = 'light grey') + 
+  theme_bw() +
+  xlab('Error Rate')
+```
+
+
+## Error and RT Trimming
+
+### Response Time
+
+First, dropping all trials with RT > 10 s
+
+```{r}
+initialRows <- nrow(d)
+
+print(paste('Number of rows before removing trials with RTs longer than 10 s:', initialRows))
+
+d <- d %>% 
+  filter(cuedRt < 10000, choiceRt < 10000)
+
+print(paste('Number of rows after removing trials with RTs longer than 10 s:', nrow(d)))
+
+badTrials <- data.frame('Data Dropped' = round(1 - (nrow(d) / initialRows), 2), Reason = 'Trials longer than 10 s')
+
+badTrials
+```
+
+
+Second, trials will be dropped based on subject-wise means of rts, separately for both cued and choice
+
+```{r}
+## choice first
+initialRows <- nrow(d)
+print(paste('Number of rows before removing trials where choices exceeded participant-wise choice RT cutoffs:', initialRows))
+
+d <- d %>% 
+  group_by(subject) %>% 
+  summarize(meanChoiceRt = mean(choiceRt), sdChoiceRt = sd(choiceRt)) %>% 
+  inner_join(d) %>% 
+  mutate(badChoice = ifelse(choiceRt <= meanChoiceRt - 2 * sdChoiceRt | choiceRt > meanChoiceRt + 2 * sdChoiceRt, 1, 0)) %>% 
+  filter(badChoice == 0) %>% 
+  select(-badChoice)
+
+print(paste('Number of rows before removing trials where choices exceeded participant-wise choice RT cutoffs:', nrow(d)))
+
+badTrials <- rbind(badTrials, data.frame('Data Dropped' = round(1 - (nrow(d) / initialRows), 2), Reason = 'Choice trials with RTs more extreme than two SDs beyond participant-wise means'))
+badTrials
+```
+
+
+```{r}
+## now for cued responses
+initialRows <- nrow(d)
+print(paste('Number of rows before removing trials where cued responses exceeded participant-wise cued RT cutoffs:', initialRows))
+
+d <- d %>% 
+  group_by(subject) %>% 
+  summarize(meancuedRt = mean(cuedRt), sdcuedRt = sd(cuedRt)) %>% 
+  inner_join(d) %>% 
+  mutate(badcued = ifelse(cuedRt <= meancuedRt - 2 * sdcuedRt | cuedRt > meancuedRt + 2 * sdcuedRt, 1, 0)) %>% 
+  filter(badcued == 0) %>% 
+  select(-badcued)
+
+print(paste('Number of rows before removing trials where cued responses exceeded participant-wise cued RT cutoffs:', nrow(d)))
+
+badTrials <- rbind(badTrials, data.frame('Data Dropped' = round(1 - (nrow(d) / initialRows), 2), Reason = 'Cued trials with RTs more extreme than two SDs beyond participant-wise means'))
+badTrials
+```
+
+
+Saving out a dataset for error analysis
+
+```{r}
+write.csv(d, '../../data/dstCleanErrors.csv', row.names = FALSE)
+```
+
+Trimming out error trials and trials following error trials  
+*I didn't actually say I'd trim trials following error trials in the document, so I might want to think about that some*
+
+```{r}
+initialRows <- nrow(d)
+print(paste('Number of rows before removing error trials and trials following error trials :', initialRows))
+
+d <- d %>% 
+  mutate(errorTrim = ifelse(error | shift(error), 1, 0)) %>% 
+  filter(errorTrim == 0)
+
+print(paste('Number of rows before removing error trials and trials following error trials :', nrow(d)))
+
+badTrials <- rbind(badTrials, data.frame('Data Dropped' = round(1 - (nrow(d) / initialRows), 2), Reason = 'Trimming error trials and trials following error trials'))
+badTrials
+```
+
+
+That should be good.
+
+```{r}
+write.csv(d, '../../data/dstClean.csv', row.names = FALSE)
+write.csv(demo, '../../data/demoClean.csv')
+n <- d %>% 
+  group_by(subject) %>% 
+  summarize(n()) %>% 
+  nrow()
+```
+
+**Final sample size is `r n`.**
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
