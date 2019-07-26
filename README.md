@@ -4,18 +4,18 @@ My aspirations for this document are to make a multi-layered experience, where y
 
 # Experiment 1
 ## Preprocessing
-[Experiment 1 Preprocessing](exp1/scripts/preprocessing/)
+[Experiment 1 Preprocessing](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/preprocessing/)
 
 ## Confirmatory Analyses
 
 ### Choice Analyses
-[Experiment 1 Choice Analyses](exp1/scripts/confirmatory/choice/)
+[Experiment 1 Choice Analyses](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/confirmatory/choice/)
 
 ### Performance Analyses
-[Experiment 1 Performance Analyses](exp1/scripts/confirmatory/performance/)
+[Experiment 1 Performance Analyses](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/confirmatory/performance/)
 
 ## Demographics Summary
-[Experiment 1 Demographics Summary](exp1/scripts/demo/)
+[Experiment 1 Demographics Summary](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/demo/)
 
 ## Exploratory Analyses
 Coming soon.
@@ -26,18 +26,18 @@ Coming soon.
 
 # Experiment 2
 ## Preprocessing
-[Experiment 2 Preprocessing](exp2/scripts/preprocessing/)
+[Experiment 2 Preprocessing](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/preprocessing/)
 
 ## Confirmatory
 ### Choice
-[Experiment 2 Confirmatory Choice Analyses](exp2/scripts/confirmatory/choice/)
+[Experiment 2 Confirmatory Choice Analyses](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/confirmatory/choice/)
 
 ## Demographics Summary
-[Experiment 2 Demographics Summary](exp2/scripts/demo/)
+[Experiment 2 Demographics Summary](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/demo/)
 
 ## Exploratory
 ### Rapid Fire Choice Analysis
-[Experiment 2 Exploratory Rapid Fire Choice Analysis](exp2/scripts/exploratory/rapidFire/)
+[Experiment 2 Exploratory Rapid Fire Choice Analysis](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/exploratory/rapidFire/)
 
 
 
