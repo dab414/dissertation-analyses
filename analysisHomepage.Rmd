@@ -7,6 +7,7 @@ output:
     code_folding: hide
     df_print: paged
     include:
+      in_header: favicon.html
       after_body: footer.html
 knit:
   (function(inputFile, encoding) {

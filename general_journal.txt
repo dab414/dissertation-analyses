@@ -10,6 +10,7 @@
       learning rate analysis
         big caveat here is that it's just harder to detect the difference between 'switching medium amount' vs 'switching a lot' or 'switching medium' vs 'barely switching'
           the control you'd need is where people just detect frequency of switching without actually performing the switching
+        done for now
     exp 2
       run choice analyses with and without trimming
       flesh out the rapid fire analysis
