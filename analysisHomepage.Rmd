@@ -22,35 +22,35 @@ My aspirations for this document are to make a multi-layered experience, where y
 
 # Experiment 1
 ### Preprocessing  
-* [Experiment 1 Preprocessing](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/preprocessing/)
+* [Experiment 1 Preprocessing](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/preprocessing/){target=_blank}
 
 ### Confirmatory Analyses
-* [Experiment 1 Choice Analyses](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/confirmatory/choice/)
-* [Experiment 1 Performance Analyses](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/confirmatory/performance/)
+* [Experiment 1 Choice Analyses](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/confirmatory/choice/){target=_blank}
+* [Experiment 1 Performance Analyses](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/confirmatory/performance/){target=_blank}
 
 ### Auxiliary Analyses
-* [Moving Reference Point Analysis](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/auxiliary/movingReference/)
-* [Learning rate analysis](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/auxiliary/learning/)
+* [Moving Reference Point Analysis](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/auxiliary/movingReference/){target=_blank}
+* [Learning Rate Analysis](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/auxiliary/learning/){target=_blank}
 
 ### Exploratory Analyses
 Coming soon.
 
 ### Demographics Summary
-* [Experiment 1 Demographics Summary](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/demo/)
+* [Experiment 1 Demographics Summary](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/demo/){target=_blank}
 
 # Experiment 2
 ### Preprocessing
-* [Experiment 2 Preprocessing](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/preprocessing/)
+* [Experiment 2 Preprocessing](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/preprocessing/){target=_blank}
 
 ### Confirmatory  
-* [Experiment 2 Confirmatory Choice Analyses](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/confirmatory/choice/)
-* [Experiment 2 Confirmatory Performance Analyses](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/confirmatory/performance)
+* [Experiment 2 Confirmatory Choice Analyses](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/confirmatory/choice/){target=_blank}
+* [Experiment 2 Confirmatory Performance Analyses](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/confirmatory/performance){target=_blank}
 
 ### Exploratory
-* [Experiment 2 Exploratory Rapid Fire Choice Analysis](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/exploratory/rapidFire/)
+* [Experiment 2 Exploratory Rapid Fire Choice Analysis](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/exploratory/rapidFire/){target=_blank}
 
 ### Demographics Summary
-* [Experiment 2 Demographics Summary](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/demo/)
+* [Experiment 2 Demographics Summary](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/demo/){target=_blank}
 
 
 
