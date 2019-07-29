@@ -11,3 +11,8 @@ rmarkdown::render(input = 'confirmatory/choice/exp1ConfirmatoryChoice.Rmd', outp
 rmarkdown::render(input = 'confirmatory/performance/exp1ConfirmatoryPerformance.Rmd', output_file = 'index.html')
 
 rmarkdown::render(input = 'demo/exp1Demo.Rmd', output_file = 'index.html')
+
+rmarkdown::render(input = 'auxiliary/movingReference/exp1MovingReference.Rmd', output_file = 'index.html')
+
+rmarkdown::render(input = 'auxiliary/learning/exp1learning.Rmd', output_file = 'index.html')
+

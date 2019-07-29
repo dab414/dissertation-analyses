@@ -1,3 +1,24 @@
+7/29/2019
+  experiments 1 and 2 are successfully collected
+    wooo, that was a rush
+
+  ive quickly set up a bunch of analyses already, but now it's time to think carefully about everything that needs to be done
+
+  things that still need to be done:
+    exp 1
+      investigate order effects
+      learning rate analysis
+        big caveat here is that it's just harder to detect the difference between 'switching medium amount' vs 'switching a lot' or 'switching medium' vs 'barely switching'
+          the control you'd need is where people just detect frequency of switching without actually performing the switching
+    exp 2
+      run choice analyses with and without trimming
+      flesh out the rapid fire analysis
+        make a decision on whether or not to use that data
+      a document for dealing with random effects
+        make the case for why controlling for them is important
+      other random exploratory stuff given the data i have
+        correlating individual difference vars with choice
+
 7/22/2019
   preparation for day 1 of data collection:
     finish data pipeline

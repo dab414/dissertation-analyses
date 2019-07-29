@@ -1,0 +1,142 @@
+---
+title: "Experiment 1 Learning Rate Analyses"
+author: "Dave Braun"
+date: "7/21/2019"
+output: 
+  html_document:
+    code_folding: hide
+    df_print: paged
+    includes:
+      after_body: footer.html
+knit:
+  (function(inputFile, encoding) {
+      rmarkdown::render(inputFile,
+                    encoding = encoding,
+                    output_file = 'index.html')})
+---
+
+```{r include = FALSE}
+library(tidyverse)
+library(segmented)
+```
+
+
+*This document was last updated at `r Sys.time()`.*
+
+This document is dedicated to exploring learning effects in Experiment 1. In short, subjects are exposed to different decks over the course of eight blocks, and, in each block, subjects need to learn the difference in difficulty between the decks. A sort of extension to the idea that people will be more sensitive to decks associated with effort intensities harder than reference (i.e., the main confirmatory choice hypothesis) is that they will learn these harder intensities faster as well. 
+
+**Load and view data:**
+
+```{r}
+dst <- read.csv('../../../data/dstClean.csv')
+N <- dst %>% 
+  group_by(subject) %>% 
+  summarize(n()) %>% 
+  nrow()
+  
+dst
+```
+
+As of now I'm using the cleaned data, meaning that error trials and RT outlier trials have been dropped.
+
+## Subject-wise inspection
+
+The first thing I want to do is get a sense of the amount of between-subject variability in the learning. I'm going to do this by, for each subject, breaking blocks into five-trial bins, then averaging across the two blocks of the same condition, then plotting each subject broken down by condition. I'm adding in Loess lines for each condition.
+
+```{r}
+dst$trialBin <- cut(dst$trial, seq(0, 100, 10), include.lowest = TRUE, right = FALSE, labels = seq(1, 100, 10))
+dst$selRefDeck <- ifelse(dst$chosenDeckId == 'reference', 1, 0)
+dst %>% 
+  group_by(trialBin, subject, difference, difficulty) %>% 
+  summarize(selRefDeck = mean(selRefDeck)) %>% 
+  ggplot(aes(x = trialBin, y = selRefDeck, group = 1)) +
+  geom_line(alpha = 0.3, aes(group = subject)) +
+  geom_smooth() +
+  facet_grid(difference ~ difficulty) + 
+  labs(
+    x = 'Trial Bin',
+    y = 'Proportion Selection of Reference Deck'
+  ) +
+  theme_bw() +
+  theme(strip.background = element_rect(fill = 'white', color = 'black'))
+```
+
+
+
+## Overall inspection
+
+```{r}
+plotData <- dst %>% 
+  group_by(subject, trial, difficulty, difference) %>% 
+  summarize(selRefDeck = mean(selRefDeck)) %>% 
+  group_by(difficulty, difference, trial) %>% 
+  summarize(srd = mean(selRefDeck), se = sd(selRefDeck) / sqrt(N)) 
+
+p1 <- plotData %>% 
+  ggplot(aes(x = trial, y = srd)) + 
+  geom_line(aes(color = difficulty, linetype = difference)) +
+  ylim(0,1) +
+  geom_ribbon(aes(ymin = srd - se, ymax = srd + se, group = interaction(difference, difficulty), fill = difficulty), alpha = .2) + 
+  scale_color_manual(name = 'Difficulty', values = c(`Easier than Reference` = 'Dark green', `Harder than reference` = 'Red')) +
+  scale_fill_manual(name = 'Difficulty', values = c(`Easier than Reference` = 'Dark green', `Harder than reference` = 'Red')) + 
+  scale_linetype_manual(name = 'Difference', values = c(Moderate = 'solid', Extreme = 'dashed')) + 
+  labs(
+    x = 'Trial',
+    y = 'Proportion Selection of Reference Deck',
+    caption = 'Color bands represent standard errors'
+  ) + 
+  theme_bw() + 
+  theme(legend.position = 'bottom')
+p1
+```
+
+
+```{r}
+dst <- dst %>% 
+  mutate(differenceD = ifelse(difference == 'Moderate', 0, 1),
+         difficultyD = ifelse(difficulty == 'Easier than Reference', 0, 1))
+
+condCodes <- dst %>% 
+  group_by(differenceD, difficultyD) %>% 
+  summarize(difference = unique(difference), difficulty = unique(difficulty))
+
+result = data.frame(differenceD = numeric(), difficultyD = numeric(), estimate = numeric(), srd = numeric())
+
+for (i in 0:1) {
+  for (e in 0:1) {
+    m1 <- glm(selRefDeck ~ trial, data = dst[dst$differenceD == i & dst$difficultyD == e,], family = binomial)
+    s1 <- segmented(m1, seg.Z = ~ trial)
+    estimate <- round(summary(s1)$psi[2])
+    srd <- plotData[plotData$difference == condCodes[condCodes$differenceD == i,]$difference[1] & plotData$difficulty == condCodes[condCodes$difficultyD == e,]$difficulty[1] & plotData$trial == estimate,]$srd
+    result <- rbind(result, data.frame(differenceD = i, difficultyD = e, estimate = estimate, srd = srd))
+  }
+}
+
+result <- result %>% 
+  inner_join(condCodes) %>% 
+  rename(trial = estimate)
+```
+```{r}
+p1 + 
+  geom_point(data = result, aes(x = trial, y = srd), color = 'blue', size = 4, shape = 13) + 
+  labs(caption = 'Blue targets represent breaking point in the selection ~ trial relationship.')
+```
+
+Not sure whether this is the right way to do it, but I fit a bilinear model separately for each difference X difficulty cell. For the final analysis, I might want to think about how to specify the full model to the analysis, especially so I can compare the model fit against something like a regular linear regression. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

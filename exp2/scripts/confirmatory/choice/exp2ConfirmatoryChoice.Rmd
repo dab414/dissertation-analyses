@@ -110,17 +110,58 @@ condMeans <- dst %>%
   group_by(difficulty) %>% 
   summarize(ssd = mean(ssd))
 
+uSubjects <- unique(dst$subject)
+
+subjectCode <- data.frame(subject = uSubjects)
+subjectCode$subjectLabel <- factor('', levels = c('Supports prospect theory', 'Opposite prospect theory', 'No difference'))
+
+for (i in uSubjects) {
+  t <- dst[dst$subject == i, c('difficulty', 'selSafeDeck')]
+  mns <- c(e = mean(t[t$difficulty == 'Easier than Reference',]$selSafeDeck), h = mean(t[t$difficulty == 'Harder than Reference',]$selSafeDeck))
+  
+  
+  if (mns[1] != mns[2]) {
+    m1 <- t.test(t[t$difficulty == 'Easier than Reference',]$selSafeDeck, t[t$difficulty == 'Harder than Reference',]$selSafeDeck, within = TRUE)
+  } else {
+    subjectCode[subjectCode$subject == i,]$subjectLabel <- 'No difference'
+    next
+  }
+  
+  if (mns['e'] > mns['h'] & m1$p.value < .05) {
+    subjectCode[subjectCode$subject == i,]$subjectLabel <- 'Supports prospect theory'
+  } else if (mns['e'] < mns['h'] & m1$p.value < .05) {
+    subjectCode[subjectCode$subject == i,]$subjectLabel <- 'Opposite prospect theory'
+  } else {
+    subjectCode[subjectCode$subject == i,]$subjectLabel <- 'No difference'
+  }
+} 
+
+dst <- subjectCode %>% 
+  inner_join(dst)
+
+
+```
+
+```{r}
+
+dst %>% 
+  group_by(subject, subjectLabel) %>% 
+  summarize(count = n()) %>% 
+  group_by(subjectLabel) %>% 
+  summarize(count = n())
+
 dst %>% 
   group_by(subject, difficulty) %>% 
-  summarize(ssd = mean(selSafeDeck)) %>% 
+  summarize(ssd = mean(selSafeDeck), subjectLabel = unique(subjectLabel)) %>% 
   ggplot(aes(x = difficulty, y = ssd)) +
   geom_violin(fill = NA, alpha = 0.2) + 
   geom_boxplot(fill = NA, alpha = 0.2) +
   geom_point(alpha = 0.4) +
-  geom_line(aes(group = subject), alpha = 0.4, linetype = 'dotted') +
+  geom_line(aes(group = subject, color = subjectLabel), linetype = 'dashed', alpha = .3) +
   geom_point(data = condMeans, aes(x = difficulty, y = ssd), size = 4, shape = 23, color = 'black', fill = 'red') +
-  geom_hline(yintercept = 0.5, linetype = 'dashed') +
+  geom_hline(yintercept = 0.5, linetype = 'dotted') +
   geom_label(data = condMeans, aes(x = difficulty, y = ssd, label = round(ssd, 2)), hjust = 1.5, vjust = 1.5) +
+  scale_color_manual(name = 'Subject Label', values = c(`Supports prospect theory` = 'dark green', `Opposite prospect theory` = 'red', `No difference` = 'black')) +
   ylim(0,1) + 
   theme_bw() +
   labs(
@@ -128,10 +169,9 @@ dst %>%
     x = 'Difficulty',
     y = 'Proportion Selection of Safe Deck',
     caption = 'Red diamond reflects condition means. Horizontal, black, solid lines reflect medians.'
-  )
-
+  ) +
+  theme(legend.position = 'bottom')
 ```
-
 
 
 ### Statistics

@@ -208,7 +208,7 @@ window.initializeCodeFolding = function(show) {
   var currentIndex = 1;
 
   // select all R code blocks
-  var rCodeBlocks = $('pre.r, pre.python, pre.bash, pre.sql, pre.cpp, pre.stan, pre.julia');
+  var rCodeBlocks = $('pre.r, pre.python, pre.bash, pre.sql, pre.cpp, pre.stan');
   rCodeBlocks.each(function() {
 
     // create a collapsable div to wrap the code in
@@ -1586,7 +1586,9 @@ h6 {
 </style>
 
 
+</head>
 
+<body>
 
 <style type="text/css">
 .main-container {
@@ -1617,6 +1619,8 @@ summary {
 </style>
 
 
+
+<div class="container-fluid main-container">
 
 <!-- tabsets -->
 
@@ -1699,15 +1703,6 @@ $(document).ready(function () {
 
 
 
-</head>
-
-<body>
-
-
-<div class="container-fluid main-container">
-
-
-
 
 <div class="fluid-row" id="header">
 
@@ -1722,8 +1717,8 @@ $(document).ready(function () {
 
 
 <h1 class="title toc-ignore">Dissertation Analysis Homepage</h1>
-<h4 class="author">Dave Braun</h4>
-<h4 class="date">7/21/2019</h4>
+<h4 class="author"><em>Dave Braun</em></h4>
+<h4 class="date"><em>7/21/2019</em></h4>
 
 </div>
 
@@ -1732,57 +1727,65 @@ $(document).ready(function () {
 <p>My aspirations for this document are to make a multi-layered experience, where you can either get the quick highlights of an analysis or dive in for the full thing. For now (7/21), I’m just linking to the full analyses organized by experiment and type of analysis.</p>
 <div id="experiment-1" class="section level1">
 <h1>Experiment 1</h1>
-<div id="preprocessing" class="section level2">
-<h2>Preprocessing</h2>
-<p><a href="exp1/scripts/preprocessing/" target="_blank">Experiment 1 Preprocessing</a></p>
+<div id="preprocessing" class="section level3">
+<h3>Preprocessing</h3>
+<ul>
+<li><a href="exp1/scripts/preprocessing/" target="_blank">Experiment 1 Preprocessing</a></li>
+</ul>
 </div>
-<div id="confirmatory-analyses" class="section level2">
-<h2>Confirmatory Analyses</h2>
-<div id="choice-analyses" class="section level3">
-<h3>Choice Analyses</h3>
-<p><a href="exp1/scripts/confirmatory/choice/" target="_blank">Experiment 1 Choice Analyses</a></p>
+<div id="confirmatory-analyses" class="section level3">
+<h3>Confirmatory Analyses</h3>
+<ul>
+<li><a href="exp1/scripts/confirmatory/choice/" target="_blank">Experiment 1 Choice Analyses</a><br />
+</li>
+<li><a href="exp1/scripts/confirmatory/performance/" target="_blank">Experiment 1 Performance Analyses</a></li>
+</ul>
 </div>
-<div id="performance-analyses" class="section level3">
-<h3>Performance Analyses</h3>
-<p><a href="exp1/scripts/confirmatory/performance/" target="_blank">Experiment 1 Performance Analyses</a></p>
+<div id="auxiliary-analyses" class="section level3">
+<h3>Auxiliary Analyses</h3>
+<ul>
+<li><a href="exp1/scripts/auxiliary/movingReference/" target="_blank">Moving Reference Point Analysis</a></li>
+<li><a href="exp1/scripts/auxiliary/learning/" target="_blank">Learning rate analysis</a></li>
+</ul>
 </div>
-</div>
-<div id="demographics-summary" class="section level2">
-<h2>Demographics Summary</h2>
-<p><a href="exp1/scripts/demo/" target="_blank">Experiment 1 Demographics Summary</a></p>
-</div>
-<div id="exploratory-analyses" class="section level2">
-<h2>Exploratory Analyses</h2>
+<div id="exploratory-analyses" class="section level3">
+<h3>Exploratory Analyses</h3>
 <p>Coming soon.</p>
 </div>
-<div id="moving-reference-point-analyses" class="section level2">
-<h2>Moving Reference Point Analyses</h2>
-<p>Coming soon.</p>
+<div id="demographics-summary" class="section level3">
+<h3>Demographics Summary</h3>
+<ul>
+<li><a href="exp1/scripts/demo/" target="_blank">Experiment 1 Demographics Summary</a></li>
+</ul>
 </div>
 </div>
 <div id="experiment-2" class="section level1">
 <h1>Experiment 2</h1>
-<div id="preprocessing-1" class="section level2">
-<h2>Preprocessing</h2>
-<p><a href="exp2/scripts/preprocessing/" target="_blank">Experiment 2 Preprocessing</a></p>
+<div id="preprocessing-1" class="section level3">
+<h3>Preprocessing</h3>
+<ul>
+<li><a href="exp2/scripts/preprocessing/" target="_blank">Experiment 2 Preprocessing</a></li>
+</ul>
 </div>
-<div id="confirmatory" class="section level2">
-<h2>Confirmatory</h2>
-<div id="choice" class="section level3">
-<h3>Choice</h3>
-<p><a href="exp2/scripts/confirmatory/choice/" target="_blank">Experiment 2 Confirmatory Choice Analyses</a></p>
+<div id="confirmatory" class="section level3">
+<h3>Confirmatory</h3>
+<ul>
+<li><a href="exp2/scripts/confirmatory/choice/" target="_blank">Experiment 2 Confirmatory Choice Analyses</a><br />
+</li>
+<li><a href="exp2/scripts/confirmatory/performance">Experiment 2 Confirmatory Performance Analyses</a></li>
+</ul>
 </div>
+<div id="exploratory" class="section level3">
+<h3>Exploratory</h3>
+<ul>
+<li><a href="exp2/scripts/exploratory/rapidFire/" target="_blank">Experiment 2 Exploratory Rapid Fire Choice Analysis</a></li>
+</ul>
 </div>
-<div id="demographics-summary-1" class="section level2">
-<h2>Demographics Summary</h2>
-<p><a href="exp2/scripts/demo/" target="_blank">Experiment 2 Demographics Summary</a></p>
-</div>
-<div id="exploratory" class="section level2">
-<h2>Exploratory</h2>
-<div id="rapid-fire-choice-analysis" class="section level3">
-<h3>Rapid Fire Choice Analysis</h3>
-<p><a href="exp2/scripts/exploratory/rapidFire/" target="_blank">Experiment 2 Exploratory Rapid Fire Choice Analysis</a></p>
-</div>
+<div id="demographics-summary-1" class="section level3">
+<h3>Demographics Summary</h3>
+<ul>
+<li><a href="exp2/scripts/demo/" target="_blank">Experiment 2 Demographics Summary</a></li>
+</ul>
 </div>
 </div>
 

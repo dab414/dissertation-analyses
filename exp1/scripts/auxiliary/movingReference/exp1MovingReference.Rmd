@@ -1,0 +1,108 @@
+---
+title: "Experiment 1 Moving Reference Point Analysis"
+author: "Dave Braun"
+date: "July 22, 2019"
+output: 
+  html_document:
+    code_folding: hide
+    df_print: paged
+    includes:
+      after_body: footer.html
+knit:
+  (function(inputFile, encoding) {
+      rmarkdown::render(inputFile,
+                    encoding = encoding,
+                    output_file = 'index.html')})
+---
+
+```{r includes = FALSE}
+library(tidyverse)
+library(ez)
+library(data.table)
+source('../../formatSimpleEffects.r')
+```
+
+This document is dedicated to conducting the analysis to test for evidence of the reference point shifting throughout the experiment.
+
+# Design and Predictions
+**Design.** The design and analysis is a 2 (difficulty: harder than reference vs. easier than reference) X 2 (lagged difficulty: difficulty condition on previous block) within-subjects ANOVA on proportion selection of the reference deck.  
+**Predictions.** If the reference point moves as a function of what condition is being performed, then there should be a simple effect of lagged difficulty within the harder-than-reference condition, where selection of reference would be greater if the previous block was a harder-than-reference block rather than if it was an easier-than-reference block.
+
+
+
+# Results
+
+## Response Times
+Below is the cleaned data:
+```{r}
+d <- read.csv('../../../data/dstClean.csv')
+
+n <- d %>% 
+  group_by(subject) %>% 
+  summarize(n()) %>% 
+  nrow(.)
+
+## code lagged difficulty
+d <- d %>% 
+  group_by(subject, block, cycle) %>% 
+  summarize(difficulty = difficulty[1]) %>% 
+  ungroup() %>% 
+  mutate(lagDifficulty = lag(difficulty)) %>% 
+  select(-difficulty) %>% 
+  inner_join(d) %>% 
+  mutate(trash = ifelse(block == 1 & cycle == 1, 1, 0)) %>% 
+  filter(trash == 0) %>% 
+  select(-trash)
+d <- d %>% 
+  mutate(selRefDeck = ifelse(chosenDeckId == 'reference', 1, 0))
+d
+```
+**The sample size is `r n`.**
+
+### Visualize the Results
+
+```{r}
+cellMeans <- d %>% 
+  group_by(subject, difficulty, lagDifficulty) %>% 
+  summarize(srd = mean(selRefDeck)) %>% 
+  group_by(difficulty, lagDifficulty) %>% 
+  summarize(selRefDeck = mean(srd), se = sd(srd) / sqrt(n()))
+cellMeans
+cellMeans %>% 
+  ggplot(aes(x = difficulty, y = selRefDeck, group = lagDifficulty)) + 
+  geom_bar(stat = 'identity', aes(fill = lagDifficulty), color = 'black', position = position_dodge(width = 0.9)) + 
+  geom_errorbar(aes(ymin = selRefDeck - se, ymax = selRefDeck + se), position = position_dodge(width = 0.9), width = 0.5) + 
+  theme_bw() +
+  xlab('Difficulty') + 
+  ylab('Proportion Selection of Reference Deck') + 
+  ylim(0,1) +
+  scale_fill_manual(name = 'Lagged Difficulty', values = c('Easier than Reference' = 'Light Grey', 'Harder than reference' = 'Black')) +
+  theme(strip.background = element_rect(color = 'black', fill = 'white'),
+        legend.position = 'top')
+```
+
+
+### Statistics
+**Subject-wise cell means**
+```{r}
+d %>% 
+  group_by(subject, lagDifficulty, difficulty) %>% 
+  summarize(selRefDeck = mean(selRefDeck)) 
+  
+```
+
+**Omnibus Model**  
+
+**This is breaking because the factors aren't fully between or within.**  
+I think I'll have to think about this one some more.
+
+```{r}
+m1 <- ezANOVA(wid = subject, between = .(difficulty, lagDifficulty), dv = selRefDeck, data = d, detailed = TRUE)
+m1
+cs <- c(colnames(m1$ANOVA), 'n2p')
+omni <- cbind(m1, data.frame(n2p = m1$ANOVA$SSn / (m1$ANOVA$SSn + m1$ANOVA$SSd)))
+colnames(omni) <- cs
+omni
+```
+
+**Planned Comparisons**
