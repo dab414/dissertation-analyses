@@ -6,6 +6,9 @@ output:
   html_document:
     code_folding: hide
     df_print: paged
+    includes:
+      after_body: ../../../footer.html
+      in_header: ../../../favicon.html
 knit:
   (function(inputFile, encoding) {
       rmarkdown::render(inputFile,

@@ -18,6 +18,8 @@ knit:
 ```{r include = FALSE}
 library(tidyverse)
 library(ggridges)
+library(data.table)
+library(ggExtra)
 ```
 ```{r include = FALSE, eval = FALSE}
 setwd('/home/dave/OneDrive/Research/By Project/Dissertation/experiments/analysis/exp2/scripts/exploratory/rapidFire/')
@@ -31,7 +33,7 @@ This document is dedicated to exploring the Experiment 2 choice data from the ra
 Load and view the rapid fire data:
 
 ```{r}
-dst <- read.csv('../../../data/dstClean.csv')
+dst <- read.csv('../../../data/dstCleanChoice.csv')
 rapidFire <- read.csv('../../../data/rapidFireClean.csv')
 N <- dst %>% 
   group_by(subject) %>% 
@@ -86,15 +88,16 @@ Now doing it in a way that better captures all subject data:
 ```{r}
 d %>% 
   group_by(subject, phase) %>% 
-  summarize(rtTime = mean(rt), se = sd(rt) / sqrt(N)) %>% 
+  summarize(rtTime = mean(rt), s = sd(rt)) %>% 
   rename(rt = rtTime) %>% 
   ggplot(aes(x = subject, y = rt, group = phase)) +
   geom_point(aes(color = phase)) +
-  geom_errorbar(aes(ymin = rt - se, ymax = rt + se), width = 0.5) +
+  geom_errorbar(aes(ymin = rt - s, ymax = rt + s), width = 0.5) +
   scale_color_manual(name = 'Phase', values = c(dstChoiceRt = 'red', rfChoiceRt = 'blue'), labels = c(dstChoiceRt = 'Demand Selection Phase', rfChoiceRt = 'Rapid Fire Phase')) +
   labs(
     x = 'Subject',
-    y = 'Response Time (ms)'
+    y = 'Response Time (ms)',
+    caption = 'Bars reflect one standard deviation'
   ) + 
   theme_bw() +
   coord_flip() +
@@ -102,6 +105,42 @@ d %>%
         axis.ticks.y = element_blank(),
         legend.position = 'bottom')
 ```
+
+```{r}
+cutoffTable <- data.table(d)[, .(m = mean(rt), s = sd(rt)), by = .(subject, phase)][, .(m = mean(m), s = sd(m), ms = mean(s), ss = sd(s)), by = phase]
+dstRtCutoff <- cutoffTable[phase=='dstChoiceRt', m - 2 * s]
+dstSdCutoff <- cutoffTable[phase=='dstChoiceRt', ms - 2 * ss]
+rfRtCutoff <- cutoffTable[phase=='rfChoiceRt', m - 2 * s]
+rfSdCutoff <- cutoffTable[phase=='rfChoiceRt', ms - 2 * ss]
+
+p <- d %>% 
+  group_by(subject, phase) %>% 
+  summarize(rtTime = mean(rt), s = sd(rt)) %>% 
+  rename(rt = rtTime) %>% 
+  ggplot(aes(x = rt, y = s, group = phase)) +
+  geom_point(aes(color = phase)) +
+  scale_color_manual(name = 'Phase', values = c(dstChoiceRt = 'red', rfChoiceRt = 'blue'), labels = c(dstChoiceRt = 'Demand Selection Phase', rfChoiceRt = 'Rapid Fire Phase')) +
+  geom_vline(xintercept = dstRtCutoff, linetype = 'dashed', color = 'red') + 
+  geom_hline(yintercept = dstSdCutoff, linetype = 'dashed', color = 'red') + 
+  geom_vline(xintercept = rfRtCutoff, linetype = 'dashed', color = 'blue') + 
+  geom_hline(yintercept = rfSdCutoff, linetype = 'dashed', color = 'blue') + 
+  labs(
+    x = 'Response Time (ms)',
+    y = 'Standard Deviation',
+    caption = 'Dashed lines represent 2 SDs below the group mean by phase and dimension.'
+  ) + 
+  theme_bw() +
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        legend.position = 'bottom')
+ggMarginal(p = p, type = 'histogram', groupFill = TRUE)
+```
+```{r}
+s <- data.table(d)[phase == 'rfChoiceRt', .(rt = mean(rt)), by = subject][rt < 200, as.numeric(subject)]
+badRfSubjects <- data.frame(subject = s, reason = rep('Spammed through rapid fire phase', length(s)))
+```
+
+
 ```{r}
 d %>% 
   group_by(subject, phase) %>% 
@@ -123,7 +162,7 @@ d %>%
 I can also try to get a sense of whether people are spamming through the rapid fire by looking at proportion selection of left / right deck throughout the phase.
 
 ```{r}
-rapidFire %>% 
+d <- rapidFire %>% 
   mutate(rfChoice = ifelse(selectedDeckLocation == 'right', 1, 0)) %>% 
   select(subject, rfChoice) %>% 
   inner_join(dst) %>% 
@@ -133,10 +172,10 @@ rapidFire %>%
   mutate(phase = as.factor(phase)) %>% 
   mutate(phase = recode(phase, 'dstChoice' = 'Demand Selection Phase', 'rfChoice' = 'Rapid Fire Phase')) %>% 
   group_by(subject, phase) %>% 
-  summarize(right = mean(isRight), sd = sd(isRight)) %>% 
+  summarize(right = mean(isRight), sd = sd(isRight)) 
+d %>% 
   ggplot(aes(x = subject, y = right)) + 
   geom_point(size = 3, shape = 18) +
-  #geom_errorbar(aes(ymin = right - sd, ymax = right + sd), width = 0.2) + 
   geom_hline(yintercept = 0.5, linetype = 'dashed') + 
   facet_wrap(~phase) +
   theme_bw() + 
@@ -153,12 +192,85 @@ rapidFire %>%
         strip.background = element_rect(fill = 'white', color = 'black'))
 ```
 
+Visualize it as choosing at chance vs. fully biased choice.
+
 ```{r}
-rapidFire %>% 
-  mutate(isRight = ifelse(selectedDeckLocation == 'right', 1, 0)) %>% 
-  group_by(subject) %>% 
-  summarize(right = mean(isRight), se = sd(isRight) / sqrt(n()), n = n())
+d <- d %>% 
+  mutate(totalBias = ifelse(right < .5, 1 - right, right)) 
+
+dstCutoff <- data.table(d)[phase == 'Demand Selection Phase', .(m = mean(right), s = sd(right))][,m+2*s]
+rfCutoff <- data.table(d)[phase == 'Rapid Fire Phase', .(m = mean(right), s = sd(right))][,m+2*s]
+
+d %>% 
+  ggplot(aes(x = subject, y = totalBias)) + 
+  geom_point(size = 3, shape = 18) +
+  geom_hline(yintercept = 0.5, linetype = 'dashed') + 
+  geom_hline(yintercept = 0.9, linetype = 'dashed', color = 'red') +
+  facet_wrap(~phase) +
+  geom_hline(data = filter(d, phase == 'Demand Selection Phase'), aes(yintercept = dstCutoff), color = 'blue', linetype = 'dashed') +
+  geom_hline(data = filter(d, phase == 'Rapid Fire Phase'), aes(yintercept = rfCutoff), color = 'blue', linetype = 'dashed') +
+  theme_bw() + 
+  coord_flip() +
+  ylim(0.5, 1) +
+  labs(
+    x = 'Subject',
+    y = 'Proportion Selection of Either Right or Left Deck',
+    title = 'Choice location bias across choice phases',
+    caption = 'Red line represents 90%. Blue line represnts 2 SDs above group mean.'
+  ) +
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        panel.grid = element_blank(),
+        strip.background = element_rect(fill = 'white', color = 'black'))
 ```
+
+```{r}
+s <- data.table(d)[totalBias > dstCutoff & phase == 'Demand Selection Phase',as.numeric(subject)]
+badDstSubjects <- data.frame(subject = s, reason = rep('Exceeded choice location bias in DST phase', length(s)))
+s <- data.table(d)[totalBias > rfCutoff & phase == 'Rapid Fire Phase',as.numeric(subject)]
+badRfSubjects <- rbind(badRfSubjects, data.frame(subject = s, reason = rep('Exceeded choice location bias in Rapid Fire phase', length(s))))
+```
+
+
+Choice correlation between phases
+
+```{r}
+d <- rapidFire %>% 
+  mutate(rfSsd = ifelse(selectedRiskyDeck, 0, 1)) %>% 
+  select(subject, rfSsd) %>% 
+  inner_join(dst) %>% 
+  mutate(dstSsd = ifelse(selectedRiskyDeck, 0, 1),
+         subject = as.factor(subject)) %>% 
+  gather(phase, SSD, rfSsd, dstSsd) %>% 
+  mutate(phase = as.factor(phase)) %>% 
+  mutate(phase = recode(phase, 'dstChoice' = 'Demand Selection Phase', 'rfChoice' = 'Rapid Fire Phase')) %>% 
+  group_by(subject, phase) %>% 
+  summarize(ssd = mean(SSD), sd = sd(SSD)) 
+
+corData <- d %>% 
+  select(-sd) %>% 
+  spread(phase, ssd)
+
+c1 <- cor.test(corData$dstSsd, corData$rfSsd)
+est <- round(c1$estimate, 2)
+pval <- round(c1$p.value, 3)
+
+p <- ggplot(corData, aes(x = dstSsd, rfSsd)) +
+  geom_point() + 
+  geom_smooth(method = 'lm') +
+  annotate('text', label = paste('r = ', est, ', ', ifelse(pval < .001, 'p < .001.', paste('p = ', pval, '.')), sep = ''), x = 0.2, y = 0.8) +
+  labs(
+    title = 'Proportion Selection of Safe Deck by Phase',
+    x = 'Demand Selection Phase',
+    y = 'Rapid Fire Phase',
+    caption = 'Points represent subject proportions'
+  ) +
+  theme_bw()
+ggMarginal(p = p, type = 'histogram')
+```
+
+
+
 
 
 Let's look at choice RT in rapid fire over time. Maybe people start out thinking about it for longer and then get frustrated toward the end.
@@ -190,6 +302,19 @@ plotData %>%
 ```
 
 
+```{r}
+rapidFire <- rapidFire[!(rapidFire$subject %in% badRfSubjects$subject), colnames(rapidFire)[colnames(rapidFire) %in% colnames(dst)]]
+
+d <- rbind(dst, rapidFire)
+
+d <- data.table(d)[!(subject %in% badDstSubjects$subject)]
+
+head(d)
+
+paste('Final N for quality choice is', d[,.N, by = subject][,.N])
+
+write.csv(d, '../../../data/aggregatedChoice.csv', row.names = FALSE)
+```
 
 
 

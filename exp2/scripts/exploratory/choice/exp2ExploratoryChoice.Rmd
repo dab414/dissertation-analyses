@@ -1,0 +1,277 @@
+---
+title: "Experiment 2 Exploratory Choice Analyses"
+author: "Dave Braun"
+date: "7/21/2019"
+output: 
+  html_document:
+    code_folding: hide
+    df_print: paged
+    includes:
+      in_header: ../../../../favicon.html
+      after_body: ../../../../footer.html
+knit:
+  (function(inputFile, encoding) {
+      rmarkdown::render(inputFile,
+                    encoding = encoding,
+                    output_file = 'index.html')})
+---
+```{r include = FALSE}
+library(tidyverse)
+library(ggExtra)
+library(ez)
+```
+
+
+*This document was last updated at `r Sys.time()`.*
+
+This document is dedicated to essentially rerunning the confirmatory analyses presented [here](../../confirmatory/choice/){target=_blank} except with the rapid fire data and several subjects dropped according to choice quality criteria (see [here](../rapidFire/){target=_blank} for details).
+
+## Design
+The design is 2 (difficulty: easier than reference vs. harder than reference) X 2 (difference: moderate vs. extreme). The analysis is a 2 X 2 within-subjects ANOVA on the proportion selection of the safe deck.  
+
+## Predictions
+The critical prediction hinges on the main effect of difficulty. The prospect model predicts that choices will be risk averse when all outcomes are easier (or equal to) the reference deck, and that choices will be risk seeking when all outcomes are harder (or equal to) the reference deck. The predictions are visualized below:
+
+<img src='exp2Predictions.png'>
+
+All other hypotheses predict that choices won't depend on difficulty. Concave up and down predict that choices, overall, will either be risk averse or risk seeking, respectively.
+
+## Results
+
+The cleaned data can be seen below
+```{r}
+dst <- read.csv('../../../data/aggregatedChoice.csv')
+N <- dst %>% 
+  group_by(subject) %>% 
+  summarize(n()) %>% 
+  nrow()
+dst
+```
+
+**The sample size is `r N`.**
+
+### Visualize the Results
+
+I'll first visualize the results broken down across the whole design, followed by a breakdown by only the critical difficulty variable.
+
+```{r}
+dst <- dst %>% 
+  mutate(difference = factor(difference, levels = levels(difference)[c(2,1)]),
+         selSafeDeck = ifelse(selectedRiskyDeck == 1, 0, 1))
+```
+
+
+```{r}
+dst %>% 
+  group_by(subject, difference, difficulty) %>% 
+  summarize(selSafeDeck = mean(selSafeDeck)) %>% 
+  group_by(difference, difficulty) %>% 
+  summarize(ssd = mean(selSafeDeck), se = sd(selSafeDeck) / sqrt(N)) %>% 
+  ggplot(aes(x = difficulty, y = ssd, group = difference)) +
+  geom_bar(stat = 'identity', aes(fill = difference), color = 'black', position = position_dodge(width = 0.9)) + 
+  geom_errorbar(aes(ymin = ssd - se, ymax = ssd + se), position = position_dodge(width = 0.9), width = 0.5) +
+  labs(
+    x = 'Difficulty',
+    y = 'Proportion Selection of Safe Deck',
+    caption = 'Dashed line represents selecting at chance'
+  ) +
+  ylim(0, 1) +
+  geom_hline(yintercept = 0.5, linetype = 'dashed') +
+  scale_fill_manual(name = 'Difference', values = c(Moderate = 'light grey', Extreme = 'black')) +
+  theme_bw()
+```
+
+Main effect of difficulty:
+
+```{r}
+dst %>% 
+  group_by(subject, difficulty) %>% 
+  summarize(selSafeDeck = mean(selSafeDeck)) %>% 
+  group_by(difficulty) %>% 
+  summarize(ssd = mean(selSafeDeck), se = sd(selSafeDeck) / sqrt(N)) %>% 
+  ggplot(aes(x = difficulty, y = ssd)) + 
+  geom_bar(stat = 'identity') +
+  geom_errorbar(aes(ymin = ssd - se, ymax = ssd + se), width = 0.5) +
+  labs(
+    x = 'Difficulty',
+    y = 'Proportion Selection of Safe Deck',
+    caption = 'Dashed line represents selecting at chance'
+  ) + 
+  ylim(0,1) +
+  geom_hline(yintercept = 0.5, linetype = 'dashed') +
+  theme_bw()
+```
+
+Visualize subject data underlying the difficulty variable:
+
+```{r}
+condMeans <- dst %>% 
+  group_by(subject, difficulty) %>% 
+  summarize(ssd = mean(selSafeDeck)) %>% 
+  group_by(difficulty) %>% 
+  summarize(ssd = mean(ssd))
+
+uSubjects <- unique(dst$subject)
+
+subjectCode <- data.frame(subject = uSubjects)
+subjectCode$subjectLabel <- factor('', levels = c('Supports prospect theory', 'Opposite prospect theory', 'No difference'))
+
+for (i in uSubjects) {
+  t <- dst[dst$subject == i, c('difficulty', 'selSafeDeck')]
+  mns <- c(e = mean(t[t$difficulty == 'Easier than Reference',]$selSafeDeck), h = mean(t[t$difficulty == 'Harder than Reference',]$selSafeDeck))
+  
+  
+  if (mns[1] != mns[2]) {
+    m1 <- t.test(t[t$difficulty == 'Easier than Reference',]$selSafeDeck, t[t$difficulty == 'Harder than Reference',]$selSafeDeck, within = TRUE)
+  } else {
+    subjectCode[subjectCode$subject == i,]$subjectLabel <- 'No difference'
+    next
+  }
+  
+  if (mns['e'] > mns['h'] & m1$p.value < .05) {
+    subjectCode[subjectCode$subject == i,]$subjectLabel <- 'Supports prospect theory'
+  } else if (mns['e'] < mns['h'] & m1$p.value < .05) {
+    subjectCode[subjectCode$subject == i,]$subjectLabel <- 'Opposite prospect theory'
+  } else {
+    subjectCode[subjectCode$subject == i,]$subjectLabel <- 'No difference'
+  }
+} 
+
+dst <- subjectCode %>% 
+  inner_join(dst)
+
+
+```
+
+```{r}
+
+dst %>% 
+  group_by(subject, subjectLabel) %>% 
+  summarize(count = n()) %>% 
+  group_by(subjectLabel) %>% 
+  summarize(count = n())
+
+dst %>% 
+  group_by(subject, difficulty) %>% 
+  summarize(ssd = mean(selSafeDeck), subjectLabel = unique(subjectLabel)) %>% 
+  ggplot(aes(x = difficulty, y = ssd)) +
+  geom_violin(fill = NA, alpha = 0.2) + 
+  geom_boxplot(fill = NA, alpha = 0.2) +
+  geom_point(alpha = 0.4) +
+  geom_line(aes(group = subject, color = subjectLabel), linetype = 'dashed', alpha = .3) +
+  geom_point(data = condMeans, aes(x = difficulty, y = ssd), size = 4, shape = 23, color = 'black', fill = 'red') +
+  geom_hline(yintercept = 0.5, linetype = 'dotted') +
+  geom_label(data = condMeans, aes(x = difficulty, y = ssd, label = round(ssd, 2)), hjust = 1.5, vjust = 1.5) +
+  scale_color_manual(name = 'Subject Label', values = c(`Supports prospect theory` = 'dark green', `Opposite prospect theory` = 'red', `No difference` = 'black')) +
+  ylim(0,1) + 
+  theme_bw() +
+  labs(
+    title = 'Selection of safe deck by difficulty and subject',
+    x = 'Difficulty',
+    y = 'Proportion Selection of Safe Deck',
+    caption = 'Red diamond reflects condition means. Horizontal, black, solid lines reflect medians.'
+  ) +
+  theme(legend.position = 'bottom')
+```
+
+
+### Statistics
+
+```{r}
+m1 <- ezANOVA(wid = subject, within = .(difference, difficulty), dv = selSafeDeck, data = dst, detailed = TRUE)
+m1$ANOVA$n2p <- m1$ANOVA$SSn / (m1$ANOVA$SSn + m1$ANOVA$SSd)
+m1$ANOVA$p <- round(m1$ANOVA$p, 3)
+data.frame(m1$ANOVA)
+```
+
+**Contrasting the extreme conditions**
+
+```{r}
+dfd <- m1$ANOVA$DFd[4]
+ssd <- m1$ANOVA$SSd[4]
+mse <- ssd / dfd
+
+m2 <- ezANOVA(wid = subject, within = difficulty, dv = selSafeDeck, data = dst[dst$difference == 'Extreme',], detailed = TRUE)
+dfn <- m2$ANOVA$DFn[2]
+ssn <- m2$ANOVA$SSn[2]
+msn <- ssn / dfn
+f_value <- msn / mse
+p_value <- pf(f_value, dfn, dfd, lower.tail = FALSE)
+n2p <- ssn / (ssn + ssd)
+```
+Simple effect of difficulty within the 'Extreme' difference condition: 
+
+**F(`r dfn`, `r dfd`) = `r round(f_value, 2)`, p = `r round(p_value, 2)`, n2p = `r round(n2p, 2)`.**
+```{r}
+dstReduce <- dst %>% 
+  filter(difference == 'Extreme') 
+
+condMeans <- dstReduce %>% 
+  filter(difference == 'Extreme') %>% 
+  group_by(subject, difficulty) %>% 
+  summarize(selSafeDeck = mean(selSafeDeck)) %>% 
+  group_by(difficulty) %>% 
+  summarize(ssd = mean(selSafeDeck), se = sd(selSafeDeck) / sqrt(N)) 
+
+uSubjects <- unique(dstReduce$subject)
+
+subjectCode <- data.frame(subject = uSubjects)
+subjectCode$subjectLabel <- factor('', levels = c('Supports prospect theory', 'Opposite prospect theory', 'No difference'))
+
+for (i in uSubjects) {
+  t <- dstReduce[dstReduce$subject == i, c('difficulty', 'selSafeDeck')]
+  mns <- c(e = mean(t[t$difficulty == 'Easier than Reference',]$selSafeDeck), h = mean(t[t$difficulty == 'Harder than Reference',]$selSafeDeck))
+  
+  
+  if (mns[1] != mns[2]) {
+    m1 <- t.test(t[t$difficulty == 'Easier than Reference',]$selSafeDeck, t[t$difficulty == 'Harder than Reference',]$selSafeDeck, within = TRUE)
+  } else {
+    subjectCode[subjectCode$subject == i,]$subjectLabel <- 'No difference'
+    next
+  }
+  
+  if (mns['e'] > mns['h'] & m1$p.value < .05) {
+    subjectCode[subjectCode$subject == i,]$subjectLabel <- 'Supports prospect theory'
+  } else if (mns['e'] < mns['h'] & m1$p.value < .05) {
+    subjectCode[subjectCode$subject == i,]$subjectLabel <- 'Opposite prospect theory'
+  } else {
+    subjectCode[subjectCode$subject == i,]$subjectLabel <- 'No difference'
+  }
+} 
+
+dstReduce <- subjectCode %>% 
+  inner_join(dstReduce)
+
+dstReduce %>% 
+  group_by(subject, difficulty) %>% 
+  summarize(ssd = mean(selSafeDeck), subjectLabel = unique(subjectLabel)) %>% 
+  ggplot(aes(x = difficulty, y = ssd)) +
+  geom_violin(fill = NA, alpha = 0.2) + 
+  geom_boxplot(fill = NA, alpha = 0.2) +
+  geom_point(alpha = 0.4) +
+  geom_line(aes(group = subject, color = subjectLabel), linetype = 'dashed', alpha = .3) +
+  geom_point(data = condMeans, aes(x = difficulty, y = ssd), size = 4, shape = 23, color = 'black', fill = 'red') +
+  geom_hline(yintercept = 0.5, linetype = 'dotted') +
+  geom_label(data = condMeans, aes(x = difficulty, y = ssd, label = round(ssd, 2)), hjust = 1.5, vjust = 1.5) +
+  scale_color_manual(name = 'Subject Label', values = c(`Supports prospect theory` = 'dark green', `Opposite prospect theory` = 'red', `No difference` = 'black')) +
+  ylim(0,1) + 
+  theme_bw() +
+  labs(
+    title = 'Selection of safe deck by difficulty and subject for Extreme difference only',
+    x = 'Difficulty',
+    y = 'Proportion Selection of Safe Deck',
+    caption = 'Red diamond reflects condition means. Horizontal, black, solid lines reflect medians.'
+  ) +
+  theme(legend.position = 'bottom')
+```
+
+
+
+
+
+
+
+
+
+
+

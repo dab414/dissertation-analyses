@@ -7,7 +7,8 @@ output:
     code_folding: hide
     df_print: paged
     includes:
-      after_body: footer.html
+      after_body: ../../../footer.html
+      in_header: ../../../favicon.html
 knit:
   (function(inputFile, encoding) {
       rmarkdown::render(inputFile,
@@ -297,6 +298,27 @@ That should be good.
 write.csv(dst, '../../data/dstClean.csv', row.names = FALSE)
 write.csv(demo, '../../data/demoClean.csv', row.names = FALSE)
 write.csv(rapidFire, '../../data/rapidFireClean.csv', row.names = FALSE)
+
+## save out condensed data with choices only
+
+dst <- dst %>% 
+  group_by(subject, choiceTrial) %>% 
+  summarize(choiceRt = mean(choiceRt), 
+            chosenDeckId = unique(chosenDeckId), 
+            difference = unique(difference), 
+            difficulty = unique(difficulty), 
+            selectedDeckLocation = unique(selectedDeckLocation),
+            leftDeckId = unique(leftDeckId),
+            rightDeckId = unique(rightDeckId),
+            riskyDeckSwitchTop = unique(riskyDeckSwitchTop),
+            riskyDeckSwitchBottom = unique(riskyDeckSwitchBottom),
+            safeDeckSwitch = unique(safeDeckSwitch),
+            outcomeSwitch = unique(outcomeSwitch),
+            condition = unique(condition),
+            selectedRiskyDeck = unique(selectedRiskyDeck)) %>% 
+  ungroup()
+
+write.csv(dst, '../../data/dstCleanChoice.csv', row.names = FALSE)
 
 n <- dst %>% 
   group_by(subject) %>% 

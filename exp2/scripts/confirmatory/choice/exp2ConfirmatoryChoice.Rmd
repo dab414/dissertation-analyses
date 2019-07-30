@@ -7,7 +7,8 @@ output:
     code_folding: hide
     df_print: paged
     includes:
-      after_body: footer.html
+      after_body: ../../../../footer.html
+      in_header: ../../../../favicon.html
 knit:
   (function(inputFile, encoding) {
       rmarkdown::render(inputFile,
@@ -39,7 +40,7 @@ All other hypotheses predict that choices won't depend on difficulty. Concave up
 
 The cleaned data can be seen below
 ```{r}
-dst <- read.csv('../../../data/dstClean.csv')
+dst <- read.csv('../../../data/dstCleanChoice.csv')
 n <- dst %>% 
   group_by(subject) %>% 
   summarize(n()) %>% 
