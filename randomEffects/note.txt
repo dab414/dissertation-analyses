@@ -1,0 +1,7 @@
+7/29/2019
+	let's have some fun with this
+	starting here: 
+		https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html
+	also this seems useful:
+		https://bbolker.github.io/mixedmodels-misc/ecostats_chap.html
+		him just narrating as he's solving glmm problems with different data		

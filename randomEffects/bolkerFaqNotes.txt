@@ -1,0 +1,39 @@
+https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html
+
+the bayesian glmer:
+	MCMCglmm::MCMCglmm
+
+is it a fixed or random effect?
+	says this is more complicated than expected
+
+overdispersion
+	is the idea that the observed data has greater variance than what would be expected based on the model fit
+	sum of squares of residuals should approximate a chi square distribution with degrees of freedom equal to the residual df of the model
+	```
+	overdisp_fun <- function(model) {
+		rdf <- df.residual(model) ## get the degrees of freedom residual (a scalar)
+		rp <- residuals(model, type='pearson') ## vector of residuals length of the data
+		Pearson.chisq <- sum(rp^2)
+		prat <- Pearson.chisq / rdf
+		pval <- pchisq(Pearson.chisq, df = rdf, lower.tail = FALSE)
+		c(chisq = Pearson.chisq, ratio = prat, rdf = rdf, p = pval)
+	}
+
+	if overdispersion is violated
+		you can fit a quasilikelihood model
+			this soudns like a real pain
+
+	(sort of restricting my notes here to things that could potentially be relevant to the dissertation)
+
+
+complete separation
+	it would be a problem for binomial models if there is some linear combination of the predictors that perfectly separates the responses
+		doesn't seem like a concern here tho
+
+non-gaussian random effects
+	this would also be concerning, he says R isn't really equipped to handle this case
+
+leaving off here
+
+later on he talks about how to get error estimates around fixed effects, with or without consideration of random variance
+
