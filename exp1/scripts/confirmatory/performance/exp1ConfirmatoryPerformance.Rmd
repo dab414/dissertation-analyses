@@ -19,6 +19,7 @@ knit:
 ```{r includes = FALSE}
 library(tidyverse)
 library(ez)
+library(data.table)
 source('../../formatSimpleEffects.r')
 ```
 
@@ -37,7 +38,7 @@ Below is the cleaned data:
 ```{r}
 d <- read.csv('../../../data/dstClean.csv')
 d <- d %>% 
-  filter(transition != 'startBlock')
+  filter(transition != 'startBlock', chosenDeckId != 'reference') 
 n <- d %>% 
   group_by(subject) %>% 
   summarize(n()) %>% 
@@ -50,7 +51,6 @@ d
 
 ```{r}
 cellMeans <- d %>% 
-  filter(transition != 'startBlock') %>% 
   group_by(subject, difference, difficulty, transition) %>% 
   summarize(mrt = mean(cuedRt)) %>% 
   group_by(difference, difficulty, transition) %>% 
@@ -73,15 +73,18 @@ cellMeans %>%
 ### Statistics
 **Subject-wise cell means**
 ```{r}
-d %>% 
+subjectCellMeans <- d %>% 
   group_by(subject, difference, difficulty, transition) %>% 
   summarize(rt = mean(cuedRt)) 
-  
+subjectCellMeans
 ```
 
 **Omnibus Model**
+*There are 15 subjects with missing cells in the design and they are being dropped from the analysis*
 ```{r}
-m1 <- ezANOVA(wid = subject, within = .(difference, difficulty, transition), dv = cuedRt, data = d, detailed = TRUE)
+badSubjects <- data.table(subjectCellMeans)[,.(count = .N), by = subject][count < 8, subject]
+subjectCellMeans <- subjectCellMeans[!(subjectCellMeans$subject %in% badSubjects),]
+m1 <- ezANOVA(wid = subject, within = .(difference, difficulty, transition), dv = rt, data = subjectCellMeans, detailed = TRUE)
 cs <- c(colnames(m1$ANOVA), 'n2p')
 omni <- cbind(m1, data.frame(n2p = m1$ANOVA$SSn / (m1$ANOVA$SSn + m1$ANOVA$SSd)))
 colnames(omni) <- cs
@@ -99,17 +102,17 @@ MSe <- SSd / DFd
 
 omnibusParams <- c('DFd' = DFd, 'SSd' = SSd, 'MSe' = MSe)
 
-d %>% 
+subjectCellMeans %>% 
   group_by(subject, difference, difficulty) %>% 
-  summarize(mrt = mean(cuedRt)) %>% 
+  summarize(mrt = mean(rt)) %>% 
   group_by(difference, difficulty) %>% 
   summarize(rt = mean(mrt), se = sd(mrt) / sqrt(n())) 
 
-m2 <- ezANOVA(wid = subject, within = difference, dv = cuedRt, data = d[d$difficulty == 'Easier than Reference',], detailed = TRUE)
+m2 <- ezANOVA(wid = subject, within = difference, dv = rt, data = subjectCellMeans[subjectCellMeans$difficulty == 'Easier than Reference',], detailed = TRUE)
 
 easier <- formatSimpleEffects(m2, omnibusParams)
 
-m2 <- ezANOVA(wid = subject, within = difference, dv = cuedRt, data = d[d$difficulty == 'Harder than reference',], detailed = TRUE)
+m2 <- ezANOVA(wid = subject, within = difference, dv = rt, data = subjectCellMeans[subjectCellMeans$difficulty == 'Harder than reference',], detailed = TRUE)
 harder <- formatSimpleEffects(m2, omnibusParams)
 
 data.frame(Contrast = c('Simple effect of difference for Easier than Reference', 'Simple effect of difference for Harder than Reference'),
@@ -123,17 +126,19 @@ DFd <- m1$ANOVA$DFd[7]
 SSd <- m1$ANOVA$SSd[7]
 MSe <- SSd / DFd
 
-d %>% 
+omnibusParams <- c('DFd' = DFd, 'SSd' = SSd, 'MSe' = MSe)
+
+subjectCellMeans %>% 
   group_by(subject, transition, difficulty) %>% 
-  summarize(mrt = mean(cuedRt)) %>% 
+  summarize(mrt = mean(rt)) %>% 
   group_by(transition, difficulty) %>% 
   summarize(rt = mean(mrt), se = sd(mrt) / sqrt(n())) 
 
-m2 <- ezANOVA(wid = subject, within = transition, dv = cuedRt, data = d[d$difficulty == 'Easier than Reference',], detailed = TRUE)
+m2 <- ezANOVA(wid = subject, within = transition, dv = rt, data = subjectCellMeans[subjectCellMeans$difficulty == 'Easier than Reference',], detailed = TRUE)
 
 easier <- formatSimpleEffects(m2, omnibusParams)
 
-m2 <- ezANOVA(wid = subject, within = transition, dv = cuedRt, data = d[d$difficulty == 'Harder than reference',], detailed = TRUE)
+m2 <- ezANOVA(wid = subject, within = transition, dv = rt, data = subjectCellMeans[subjectCellMeans$difficulty == 'Harder than reference',], detailed = TRUE)
 harder <- formatSimpleEffects(m2, omnibusParams)
 
 data.frame(Contrast = c('Simple effect of transition for Easier than Reference', 'Simple effect of transition for Harder than Reference'),
@@ -141,7 +146,31 @@ data.frame(Contrast = c('Simple effect of transition for Easier than Reference',
 ```
 
 
-I'll deal with the three-way only if I need to.
+**Post-hoc follow ups on the three-way interaction**
+
+```{r}
+DFd <- m1$ANOVA$DFd[8]
+SSd <- m1$ANOVA$SSd[8]
+MSe <- SSd / DFd
+omnibusParams <- c('DFd' = DFd, 'SSd' = SSd, 'MSe' = MSe)
+
+m2 <- ezANOVA(wid = subject, within = .(transition, difference), dv = rt, data = subjectCellMeans[subjectCellMeans$difficulty == 'Easier than Reference',], detailed = TRUE)
+
+easier <- formatSimpleEffects(m2, omnibusParams)
+
+m2 <- ezANOVA(wid = subject, within = .(transition, difference), dv = rt, data = subjectCellMeans[subjectCellMeans$difficulty == 'Harder than reference',], detailed = TRUE)
+
+harder <- formatSimpleEffects(m2, omnibusParams)
+
+# SSn <- m2$ANOVA$SSn[4]
+# DFn <- m2$ANOVA$DFn[4]
+# MSn <- SSn / DFn
+# f_value <- MSn / MSe
+# p_value <- pf(f_value, DFn, DFd, lower.tail = FALSE)
+# n2p <- SSn / (SSn + SSd)
+# easier <- 
+```
+
 
 
 ## Error Rates
@@ -149,7 +178,7 @@ Below is the cleaned data:
 ```{r}
 d <- read.csv('../../../data/dstCleanErrors.csv')
 d <- d %>% 
-  filter(transition != 'startBlock')
+  filter(transition != 'startBlock', chosenDeckId != 'reference')
 d
 ```
 
@@ -180,15 +209,17 @@ cellMeans %>%
 ### Statistics
 **Subject-wise cell means**
 ```{r}
-d %>% 
+subjectCellMeans <- d %>% 
   group_by(subject, difference, difficulty, transition) %>% 
   summarize(error = mean(error)) 
-  
+subjectCellMeans
 ```
 
 **Omnibus Model**
 ```{r}
-m1 <- ezANOVA(wid = subject, within = .(difference, difficulty, transition), dv = error, data = d, detailed = TRUE)
+badSubjects <- data.table(subjectCellMeans)[, .(count = .N), by = subject][count < 8, subject]
+subjectCellMeans <- subjectCellMeans[!(subjectCellMeans$subject %in% badSubjects),]
+m1 <- ezANOVA(wid = subject, within = .(difference, difficulty, transition), dv = error, data = subjectCellMeans, detailed = TRUE)
 cs <- c(colnames(m1$ANOVA), 'n2p')
 omni <- cbind(m1, data.frame(n2p = m1$ANOVA$SSn / (m1$ANOVA$SSn + m1$ANOVA$SSd)))
 colnames(omni) <- cs
@@ -212,11 +243,11 @@ d %>%
   group_by(difference, difficulty) %>% 
   summarize(rt = mean(mrt), se = sd(mrt) / sqrt(n())) 
 
-m2 <- ezANOVA(wid = subject, within = difference, dv = error, data = d[d$difficulty == 'Easier than Reference',], detailed = TRUE)
+m2 <- ezANOVA(wid = subject, within = difference, dv = error, data = subjectCellMeans[subjectCellMeans$difficulty == 'Easier than Reference',], detailed = TRUE)
 
 easier <- formatSimpleEffects(m2, omnibusParams)
 
-m2 <- ezANOVA(wid = subject, within = difference, dv = error, data = d[d$difficulty == 'Harder than reference',], detailed = TRUE)
+m2 <- ezANOVA(wid = subject, within = difference, dv = error, data = subjectCellMeans[subjectCellMeans$difficulty == 'Harder than reference',], detailed = TRUE)
 harder <- formatSimpleEffects(m2, omnibusParams)
 
 data.frame(Contrast = c('Simple effect of difference for Easier than Reference', 'Simple effect of difference for Harder than Reference'),
@@ -238,11 +269,11 @@ d %>%
   group_by(transition, difficulty) %>% 
   summarize(rt = mean(mrt), se = sd(mrt) / sqrt(n())) 
 
-m2 <- ezANOVA(wid = subject, within = transition, dv = error, data = d[d$difficulty == 'Easier than Reference',], detailed = TRUE)
+m2 <- ezANOVA(wid = subject, within = transition, dv = error, data = subjectCellMeans[subjectCellMeans$difficulty == 'Easier than Reference',], detailed = TRUE)
 
 easier <- formatSimpleEffects(m2, omnibusParams)
 
-m2 <- ezANOVA(wid = subject, within = transition, dv = error, data = d[d$difficulty == 'Harder than reference',], detailed = TRUE)
+m2 <- ezANOVA(wid = subject, within = transition, dv = error, data = subjectCellMeans[subjectCellMeans$difficulty == 'Harder than reference',], detailed = TRUE)
 harder <- formatSimpleEffects(m2, omnibusParams)
 
 data.frame(Contrast = c('Simple effect of transition for Easier than Reference', 'Simple effect of transition for Harder than Reference'),
