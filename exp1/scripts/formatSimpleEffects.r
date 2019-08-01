@@ -1,6 +1,7 @@
 formatSimpleEffects <- function(model, omnibusParams) {
-  SSn <- model$ANOVA$SSn[2]
-  DFn <- model$ANOVA$DFn[2]
+  index <- nrow(model$ANOVA)
+  SSn <- model$ANOVA$SSn[index]
+  DFn <- model$ANOVA$DFn[index]
   MSn <- SSn/ DFn
   f_value <- MSn / omnibusParams['MSe']
   p_value <- pf(f_value, DFn, omnibusParams['DFd'], lower.tail = FALSE)

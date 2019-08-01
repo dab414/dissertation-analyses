@@ -156,8 +156,8 @@ dst %>%
   summarize(ssd = mean(selSafeDeck), subjectLabel = unique(subjectLabel)) %>% 
   ggplot(aes(x = difficulty, y = ssd)) +
   geom_violin(fill = NA, alpha = 0.2) + 
-  geom_boxplot(fill = NA, alpha = 0.2) +
-  geom_point(alpha = 0.4) +
+  geom_boxplot(fill = NA, alpha = 0.3) +
+  geom_jitter(alpha = 0.4, width = .05, height = 0) +
   geom_line(aes(group = subject, color = subjectLabel), linetype = 'dashed', alpha = .3) +
   geom_point(data = condMeans, aes(x = difficulty, y = ssd), size = 4, shape = 23, color = 'black', fill = 'red') +
   geom_hline(yintercept = 0.5, linetype = 'dotted') +
