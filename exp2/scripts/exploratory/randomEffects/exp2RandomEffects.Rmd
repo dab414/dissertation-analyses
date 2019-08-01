@@ -1,0 +1,281 @@
+---
+title: "Experiment 2 Random Effects"
+author: "Dave Braun"
+date: "7/21/2019"
+output: 
+  html_document:
+    code_folding: hide
+    df_print: paged
+    includes:
+      after_body: ../../../../footer.html
+      in_header: ../../../../favicon.html
+knit:
+  (function(inputFile, encoding) {
+      rmarkdown::render(inputFile,
+                    encoding = encoding,
+                    output_file = 'index.html')})
+---
+
+```{r include = FALSE}
+library(tidyverse)
+library(data.table)
+library(lme4)
+library(bbmle)
+library(car)
+```
+
+
+*This document was last updated at `r Sys.time()`.*
+
+This document is dedicated to exploring analyses of choice data from Experiment 2 that control for random effects. Much of my approach here is informed by [Ben Bolker's incredible resources](https://bbolker.github.io/mixedmodels-misc/) on generalized linear mixed models (GLMMs).
+
+# The Case for Random Effects
+As I believe the brilliant [Lucy Napper](https://psychology.cas2.lehigh.edu/content/lucy-napper) once explained to me in PSYC Stats 422 a long time ago, a random effect is generally any variable in the experimental design whose levels are a sampling of all possible levels in the population or world. One can then group the fixed effects by the random factors to assess how the fixed factors vary across levels of the random factors. It's also a part of the design you're not explicitly looking to study. [Bolker](https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html) warns us, however, that determining whether a factor should be treated as fixed or random is often more difficult that it seems.  
+
+A common example (and the factor I'll be treating as a random effect in these analyses) is thinking about subjects as a random factor. For any study, a group of subjects is randomly sampled and is supposed to represent the larger population of people. We assume the fixed effects are homogeneous across subjects, and the extent to which that's not true is problematic for inference to the population. The same applies to another common example like items or stimuli. If one selects faces to use as stimuli, you're assuming whatever effects you observe would extrapolate to all faces. If we can quantify the extent to which the fixed effects vary across levels of subjects or stimuli, then (1) we have a better understanding of the true fixed effects underlying the patterns in the data, and (2) we're better able to infer how those effects will manifest in a new sampling of subjects or items. 
+
+## The general form of the general(ized) linear mixed model
+I'll quickly review what's essentially the regression equation for generalized linear mixed models (for a quick reference, I found [this](https://stats.idre.ucla.edu/other/mult-pkg/introduction-to-linear-mixed-models/) to be an excellent review.  
+
+The general level 1 equation is as follows:
+
+$$
+\hat{Y} = \beta_{0j} + \beta_{1j} * X_{1ij} . . . + \epsilon_i
+$$
+
+Where the only difference between this equation and a non-mixed model is that the fixed effects are free to vary between subjects, as denoted by the $j$ subscript. The level 2 equations look as follows:  
+
+$$
+\beta_{0j} = \gamma_{00} + u_{0j}\\
+\beta_{1j} = \gamma_{01} + u_{1j}
+$$
+
+Where $\gamma_{00}$ and $\gamma_{01}$ are the true intercepts and slopes, respectively, and where the $u$ terms are normally distributed with a mean of zero and a variance determined by the variance-covariance matrix of the random effects. So the fixed effects are modified by these random variance terms, and that modification is constant within subjects.
+
+## Data exploration: Random effects in Experiment 2 choice data
+
+The need for a mixed model jumped out to me when visualizing the between-subject variability in the predicted choice effects, particularly the main effect of difficulty on risk preferences:  
+
+*Note: for now I'm only using the basic choice data, meaning **not** including data from rapid fire or the choice-based trimming outlined in the [rapid fire document](../rapidFire/)*
+
+```{r}
+d <- read.csv('../../../data/dstCleanChoice.csv')
+d$selSafeDeck <- ifelse(d$selectedRiskyDeck == 1, 0, 1)
+N <- nrow(data.table(d)[,.(count = .N), by = subject])
+
+sMeans <- d %>%
+  mutate(condition = factor(condition)) %>% 
+  mutate(condition = factor(condition, levels = levels(condition)[c(2,1,4,3)])) %>% 
+  group_by(subject, condition) %>% 
+  summarize(selSafeDeck = mean(selSafeDeck))
+
+condMeans <- sMeans %>%
+  group_by(condition) %>% 
+  summarize(ssd = mean(selSafeDeck))
+
+sMeans %>% 
+  group_by(condition) %>% 
+  summarize(ssd = mean(selSafeDeck), se = sd(selSafeDeck) / sqrt(N)) %>% 
+  ggplot(aes(x = condition, y = ssd)) +
+  geom_point(size = 4, shape = 23, fill = 'red', color = 'black') +
+  geom_jitter(data = sMeans, aes(x = condition, y = selSafeDeck), width = .05, height = 0, alpha = 0.3) +
+  geom_line(data = sMeans, aes(x = condition, y = selSafeDeck, group = subject), linetype = 'dashed', alpha = 0.3) +
+  geom_boxplot(data = sMeans, aes(x = condition, y = selSafeDeck), fill = NA) +
+  geom_label(data = condMeans, mapping = aes(x = condition, y = ssd, label = round(ssd, 2)), hjust = 1.5, vjust = 1.5) + 
+  labs(
+    x = 'Critical Deck Intensity',
+    y = 'Proportion Selections of Safe Deck',
+    caption = 'Red diamonds reflect condition means; Horizontal bars in box plots reflect medians.'
+  ) +
+  scale_x_discrete(labels = c('Easy Moderate', 'Easy Extreme', 'Hard Moderate', 'Hard Extreme')) +
+  theme_bw()
+  
+```
+
+At the very least, we can see from this plot that the intercepts are highly variable. It's tough from this plot to get a sense of to what extent the interaction varies across subjects. But we can look at the intercept in its own right:
+
+```{r}
+d %>% 
+  group_by(subject) %>% 
+  summarize(ssd = mean(selSafeDeck)) %>% 
+  ggplot(aes(x = subject, y = ssd)) +
+  geom_point(shape = 17) +
+  geom_hline(yintercept = 0.5, linetype = 'dashed') +
+  coord_flip() +
+  labs(
+    x = 'Subject',
+    y = 'Proportion Selection of Safe Deck'
+  ) + 
+  theme_bw() + 
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        panel.grid = element_blank())
+```
+
+At baseline, some people are more risk averse than others, which could make it more difficult to detect the predicted effects. We can also look at individual variablility in the critical main effect of difficulty:
+
+```{r}
+condMeans <- d %>% 
+  group_by(subject, difficulty) %>% 
+  summarize(ssd = mean(selSafeDeck)) %>% 
+  group_by(difficulty) %>% 
+  summarize(ssd = mean(ssd))
+
+# uSubjects <- unique(d$subject)
+# 
+# subjectCode <- data.frame(subject = uSubjects)
+# subjectCode$subjectLabel <- factor('', levels = c('Supports prospect theory', 'Opposite prospect theory', 'No difference'))
+# 
+# for (i in uSubjects) {
+#   t <- d[d$subject == i, c('difficulty', 'selSafeDeck')]
+#   mns <- c(e = mean(t[t$difficulty == 'Easier than Reference',]$selSafeDeck), h = mean(t[t$difficulty == 'Harder than Reference',]$selSafeDeck))
+#   
+#   
+#   if (mns[1] != mns[2]) {
+#     m1 <- t.test(t[t$difficulty == 'Easier than Reference',]$selSafeDeck, t[t$difficulty == 'Harder than Reference',]$selSafeDeck, within = TRUE)
+#   } else {
+#     subjectCode[subjectCode$subject == i,]$subjectLabel <- 'No difference'
+#     next
+#   }
+#   
+#   if (mns['e'] > mns['h'] & m1$p.value < .05) {
+#     subjectCode[subjectCode$subject == i,]$subjectLabel <- 'Supports prospect theory'
+#   } else if (mns['e'] < mns['h'] & m1$p.value < .05) {
+#     subjectCode[subjectCode$subject == i,]$subjectLabel <- 'Opposite prospect theory'
+#   } else {
+#     subjectCode[subjectCode$subject == i,]$subjectLabel <- 'No difference'
+#   }
+# } 
+# 
+# d <- subjectCode %>% 
+#   inner_join(d)
+# 
+# d %>% 
+#   group_by(subject, subjectLabel) %>% 
+#   summarize(count = n()) %>% 
+#   group_by(subjectLabel) %>% 
+#   summarize(count = n())
+
+d %>% 
+  group_by(subject, difficulty) %>% 
+  summarize(ssd = mean(selSafeDeck)) %>% 
+  ggplot(aes(x = difficulty, y = ssd)) +
+  geom_violin(fill = NA, alpha = 0.2) + 
+  geom_boxplot(fill = NA, alpha = 0.3) +
+  geom_jitter(alpha = 0.4, width = .05, height = 0) +
+  geom_line(aes(group = subject), linetype = 'dashed', alpha = .3) +
+  geom_point(data = condMeans, aes(x = difficulty, y = ssd), size = 4, shape = 23, color = 'black', fill = 'red') +
+  geom_hline(yintercept = 0.5, linetype = 'dotted') +
+  geom_label(data = condMeans, aes(x = difficulty, y = ssd, label = round(ssd, 2)), hjust = 1.5, vjust = 1.5) +
+  scale_color_manual(name = 'Subject Label', values = c(`Supports prospect theory` = 'dark green', `Opposite prospect theory` = 'red', `No difference` = 'black')) +
+  ylim(0,1) + 
+  theme_bw() +
+  labs(
+    title = 'Selection of safe deck by difficulty and subject',
+    x = 'Difficulty',
+    y = 'Proportion Selection of Safe Deck',
+    caption = 'Red diamond reflects condition means. Horizontal, black, solid lines reflect medians.'
+  ) +
+  theme(legend.position = 'bottom')
+```
+
+
+The extent to which the lines intersect reflects between-subject variability in the main effect of difficulty. The objective of fitting a mixed model to these data will be to control for some of this between-subject variability to get a better sense of what the true effects in the data might be.
+
+## Fitting
+
+There are many different statistical packages in R that can fit generalized linear mixed models, but I'll be focusing on `lme4` by Bates, Maechler, Bolker, & Walker (2015).  
+
+I'm approaching model fits with the logic spelled out in [Bar et al., 2013](bar_et_al_2013.pdf), which is to specify the maximal model allowed by the data and progressively scale it back. One should progressively drop terms from the model if the model doesn't converge or if those terms prove to be insignificant. I'm including (effect coded) difference and difficulty, with selection of safe deck (`[0, 1]`) as the binary outcome. A logit link function will be used as the outcome is consistent with a Bernoulli distribution, and I'll be using LaPlace estimation at first. 
+
+Fit the maximal model:
+
+```{r}
+d$differenceE <- ifelse(d$difference == 'Moderate', -0.5, 0.5)
+d$difficultyE <- ifelse(d$difficulty == 'Easier than Reference', -0.5, 0.5)
+m1_maximal <- glmer(selSafeDeck ~ differenceE * difficultyE + (1 + difficultyE * differenceE | subject), data = d, family = binomial, control = glmerControl(optimizer = 'bobyqa'))
+summary(m1_maximal)
+```
+
+I'm going to jump right to dropping the random interaction and compare AICs
+
+```{r}
+m1_mainEffects <- glmer(selSafeDeck ~ differenceE * difficultyE + (1 + difficultyE + differenceE | subject), data = d, family = binomial, control = glmerControl(optimizer = 'bobyqa'))
+AICtab(m1_maximal, m1_mainEffects, nobs = nrow(d))
+anova(m1_mainEffects, m1_maximal)
+```
+
+The maximal model fails the AIC test against the simpler, main effects model. Taking the effects out reveals that the effects don't explain a significant proportion of the variance according to a chi-squre test. Stepping down again:
+
+```{r}
+m1_noCov <- glmer(selSafeDeck ~ differenceE * difficultyE + (1| subject) + (0 + difficultyE | subject) + (0 + differenceE) , data = d, family = binomial, control = glmerControl(optimizer = 'bobyqa'))
+AICtab(m1_noCov, m1_mainEffects, nobs = nrow(d))
+anova(m1_noCov, m1_mainEffects)
+```
+
+The covariances aren't significant either. Stepping down again.
+
+```{r}
+m1_noDiff <- glmer(selSafeDeck ~ differenceE * difficultyE + (1| subject) + (0 + differenceE) , data = d, family = binomial, control = glmerControl(optimizer = 'bobyqa'))
+AICtab(m1_noCov, m1_noDiff, nobs = nrow(d))
+anova(m1_noCov, m1_noDiff)
+```
+
+The random slope of difference is indeed a significant parameter in the model, so we can conclude that the model with the intercept and both slope variances (with no covariances) is the optimal model.  
+
+Now assessing how much gain in precision there is from using Gauss-Hermite quadrature estimation instead of LaPlace. I'll assess this by looking at how estimation of the effects changes as a function of increasing quadrature points.  
+
+Alright, nevermind. It seems that lme4 doesn't support using Gauss-Hermite estimation with more than one scalar random effect term... it appears to be a [known limitation](https://github.com/lme4/lme4/issues/123)---it's an old thread but I can't find much recent discussion on the topic.  
+
+I'll run it on an intercept-only model just for fun.
+
+```{r}
+m1_intercept <- glmer(selSafeDeck ~ differenceE * difficultyE + (1 | subject), data = d, family = binomial, control = glmerControl(optimizer = 'bobyqa'))
+```
+```{r}
+agqfun <- function(i) {
+  f <- update(m1_intercept, nAGQ = i)
+  c(fixef(f), sqrt(unlist(VarCorr(f))))
+}
+agqvec <- 1:25
+agqres <- sapply(agqvec, agqfun)
+```
+
+```{r}
+t <- data.frame(agqres)
+tarNames <- c('Intercept', 'Difference', 'Difficulty', 'Interaction', 'RandomIntercept')
+colnames(t) <- 1:25
+
+t %>% 
+  mutate(term = tarNames) %>% 
+  gather(agq, estimate, `1`:`25`) %>% 
+  ggplot(aes(x = as.numeric(agq), y = estimate, group = 1)) +
+  geom_line() +
+  facet_wrap(~term, scales = 'free') +
+  labs(
+    x = 'Number of adaptive Gauss-Hermite quadrature points',
+    y = 'Estimate'
+  ) + 
+  theme_bw() + 
+  theme(strip.background = element_rect(color = 'black', fill = 'white'))
+```
+
+So there are adjustments to the effects depending on the number of quadriture points, but the absolute scale is so small. It's interesting that all parameters seem to asymptote around n = 10. I'm feeling like I'm not missing much by keeping LaPlace estimation (n = 1).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

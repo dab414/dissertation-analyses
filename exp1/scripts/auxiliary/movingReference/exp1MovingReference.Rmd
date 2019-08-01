@@ -16,7 +16,7 @@ knit:
                     output_file = 'index.html')})
 ---
 
-```{r includes = FALSE}
+```{r include = FALSE}
 library(tidyverse)
 library(ez)
 library(data.table)
