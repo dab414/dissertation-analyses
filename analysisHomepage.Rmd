@@ -59,6 +59,8 @@ Coming soon.
 * [Exploratory Rapid Fire Choice Analysis](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/exploratory/rapidFire/){target=_blank}  
 * [Exploratory Choice Analysis](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/exploratory/choice/){target=_blank}  
   * The 2 (difficulty) X 2 (difference) X 2 (transition) ANOVA (on RTs) that was proposed in the document.  
+* [Exploratory Random Effects Analysis](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/exploratory/randomEffects/){target=_blank}
+  * Fitting generalized linear mixed models to the choice data in an effort to control for between-subject variance in the predicted effects.
 
 ### Demographics Summary
 * [Demographics Summary](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/demo/){target=_blank}  
