@@ -179,10 +179,26 @@ dst %>%
 
 ```{r}
 m1 <- ezANOVA(wid = subject, within = .(difference, difficulty), dv = selSafeDeck, data = dst, detailed = TRUE)
-data.frame(m1$ANOVA)
+m1a <- data.frame(m1$ANOVA)
+m1a$p <- round(m1a$p, 3)
+m1a
 ```
 
 
+Following up on the marginal interaction by comparing the two extreme conditions:
+
+```{r}
+DFd <- m1$ANOVA$DFd[4]
+SSd <- m1$ANOVA$SSd[4]
+MSe <- SSd / DFd
+omnibusParams <- c(DFd = DFd, SSd = SSd, MSe = MSe)
+
+m2 <- ezANOVA(wid = subject, within = .(difficulty), dv = selSafeDeck, data = dst[dst$difference == 'Extreme',], detailed = TRUE)
+
+s <- 'Simple effect of difficulty for Extreme difference'
+r <- formatSimpleEffects(omnibusParams = omnibusParams, model = m2)
+data.frame(Contrast = s, Result = r)
+```
 
 
 

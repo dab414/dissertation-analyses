@@ -197,9 +197,32 @@ p_value <- pf(f_value, DFn, DFd, lower.tail = FALSE)
 n2p <- SSn / (SSn + SSd)
 easier <- paste('F(',DFn, ', ', DFd, ') = ', round(f_value, 2), ', p = ', round(p_value, 2), ', n2p = ', round(n2p, 2), sep = '')
 
-data.frame(Contrast = c('Harder than Reference', 'Easier than Reference'), Result = c(harder, easier))
+data.frame(Contrast = c('Simple effect of difference for Harder than Reference', 'Simple effect of difference for Easier than Reference'), Result = c(harder, easier))
 ```
 
+
+**Post-hoc follow up**  
+Comparing the moderate conditions
+
+```{r}
+source('../../../../exp2/scripts/formatSimpleEffects.r')
+omnibusParams <- c(DFd = DFd, MSe = MSe, SSd = SSd)
+
+m4 <- ezANOVA(wid = subject, within = .(difficulty), dv = selRefDeck, data = subjectCellMeans[subjectCellMeans$difference == 'Moderate',], detailed = TRUE)
+
+s1 <- 'Simple effect of difficulty for moderate difference:'
+      
+r1 <- formatSimpleEffects(m4, omnibusParams)
+
+m5 <- ezANOVA(wid = subject, within = .(difficulty), dv = selRefDeck, data = subjectCellMeans[subjectCellMeans$difference == 'Extreme',], detailed = TRUE)
+
+s2 <- 'Simple effect of difficulty for extreme difference:'
+      
+r2 <- formatSimpleEffects(m5, omnibusParams)
+
+data.frame(Contrast = c(s1, s2), Result = c(r1, r2))
+
+```
 
 
 
