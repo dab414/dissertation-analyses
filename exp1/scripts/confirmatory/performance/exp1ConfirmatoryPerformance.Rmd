@@ -39,13 +39,13 @@ Below is the cleaned data:
 d <- read.csv('../../../data/dstClean.csv')
 d <- d %>% 
   filter(transition != 'startBlock', chosenDeckId != 'reference') 
-n <- d %>% 
+N <- d %>% 
   group_by(subject) %>% 
   summarize(n()) %>% 
   nrow(.)
 d
 ```
-**The sample size is `r n`.**
+**The sample size is `r N`.**
 
 ### Visualize the Results
 
@@ -92,6 +92,24 @@ omni$p <- round(omni$p, 3)
 omni
 ```
 
+**Marginal Means for Main Effects**
+```{r}
+d %>% 
+  group_by(subject, difficulty) %>% 
+  summarize(rtime = mean(cuedRt)) %>% 
+  group_by(difficulty) %>% 
+  summarize(rt = mean(rtime), se = sd(rtime) / sqrt(N))
+```
+
+```{r}
+d %>% 
+  group_by(subject, transition) %>% 
+  summarize(rtime = mean(cuedRt)) %>% 
+  group_by(transition) %>% 
+  summarize(rt = mean(rtime), se = sd(rtime) / sqrt(N))
+```
+
+
 **Planned Comparisons**
 
 Difficulty X Difference 
@@ -103,11 +121,12 @@ MSe <- SSd / DFd
 
 omnibusParams <- c('DFd' = DFd, 'SSd' = SSd, 'MSe' = MSe)
 
-subjectCellMeans %>% 
+d %>% 
   group_by(subject, difference, difficulty) %>% 
-  summarize(mrt = mean(rt)) %>% 
+  summarize(mrt = mean(cuedRt)) %>% 
   group_by(difference, difficulty) %>% 
-  summarize(rt = mean(mrt), se = sd(mrt) / sqrt(n())) 
+  summarize(rt = mean(mrt), se = sd(mrt) / sqrt(n()))
+
 
 m2 <- ezANOVA(wid = subject, within = difference, dv = rt, data = subjectCellMeans[subjectCellMeans$difficulty == 'Easier than Reference',], detailed = TRUE)
 

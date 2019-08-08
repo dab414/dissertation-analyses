@@ -1,3 +1,10 @@
+8/8/2019
+	i should probably do some type of exploratory analysis of order effects in exps 2 / 3, cuz im sure jessecae will ask about it
+
+	performance analyses
+		i need marginal means for all significant effects
+		change the difference X difficulty RT follow up to be the simple effect of difficulty at each level of difference
+
 7/31/2019
   starting fixing performance analyses
   realized formatSimpleEffects() needs to be generalized to include instances where effects from simplified model aren't on second row
