@@ -261,6 +261,23 @@ colnames(omni) <- cs
 omni
 ```
 
+**Marginal Means for Main Effects**
+```{r}
+print('Main effect of switch cost')
+d %>% 
+  group_by(transition, subject) %>% 
+  summarize(err = mean(error)) %>% 
+  group_by(transition) %>% 
+  summarize(error = mean(err), se = sd(err) / sqrt(N))
+
+print('Overall error rate')
+d %>% 
+  group_by(subject) %>% 
+  summarize(err = mean(error)) %>% 
+  summarize(error = mean(err), se = sd(err) / sqrt(N))
+```
+
+
 **Planned Comparisons**
 
 Difficulty X Difference 
