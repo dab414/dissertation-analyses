@@ -19,6 +19,7 @@ knit:
 library(tidyverse)
 library(ggExtra)
 library(ez)
+source('../../formatSimpleEffects.r')
 ```
 
 
@@ -181,7 +182,17 @@ dst %>%
 m1 <- ezANOVA(wid = subject, within = .(difference, difficulty), dv = selSafeDeck, data = dst, detailed = TRUE)
 m1a <- data.frame(m1$ANOVA)
 m1a$p <- round(m1a$p, 3)
+m1a$n2p <- round(m1a$SSn / (m1a$SSn + m1a$SSd),3)
 m1a
+```
+
+**Means for difference effect**
+```{r}
+dst %>% 
+  group_by(difference, subject) %>% 
+  summarize(selSafeDeck = mean(selSafeDeck)) %>% 
+  group_by(difference) %>% 
+  summarize(ssd = mean(selSafeDeck), se = sd(selSafeDeck)/ sqrt(n))
 ```
 
 

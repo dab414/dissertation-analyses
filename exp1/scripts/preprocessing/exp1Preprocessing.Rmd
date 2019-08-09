@@ -71,7 +71,10 @@ badSubjectsList <- badSubjectsList %>%
 badSubjects <- rbind(badSubjects, data.frame(subject = badSubjectsList$subject, reason = rep('Error rate higher than 15%', nrow(badSubjectsList))))
 
 badSubjects
+uniqueBadSubjects <- nrow(badSubjects[unique(badSubjects$subject),])
 ```
+
+**A total of `r uniqueBadSubjects` will be dropped based on the rejection information above.**
 
 So we have a shocking number of subjects who are just making random responses. I'm making a criterion for rejecting HITs, which is error rates higher than 35% or mean cued RTs lower than 400. These two vars are a clear diagnostic between people who are and aren't doing the task correctly.  
 

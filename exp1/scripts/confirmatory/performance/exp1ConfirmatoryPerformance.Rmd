@@ -274,7 +274,7 @@ print('Overall error rate')
 d %>% 
   group_by(subject) %>% 
   summarize(err = mean(error)) %>% 
-  summarize(error = mean(err), se = sd(err) / sqrt(N))
+  summarize(error = mean(err), sd = sd(err))
 ```
 
 

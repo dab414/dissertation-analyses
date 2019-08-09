@@ -72,6 +72,8 @@ d %>%
 d %>% 
   group_by(gender) %>% 
   summarize(count = n()) %>% 
+  mutate(relProp = count / nrow(d)) %>% 
+  print() %>% 
   ggplot(aes(x = gender, y = count)) +
   geom_bar(stat = 'identity', color = 'black', fill = 'light grey') +
   theme_bw() +
@@ -85,6 +87,8 @@ d %>%
 d %>% 
   group_by(race) %>% 
   summarize(count = n()) %>% 
+  mutate(relProp = count / nrow(d)) %>% 
+  print() %>% 
   ggplot(aes(x = race, y = count)) +
   geom_bar(stat = 'identity', color = 'black', fill = 'light grey') +
   theme_bw() +
@@ -99,6 +103,8 @@ d %>%
 d %>% 
   group_by(ethnicity) %>% 
   summarize(count = n()) %>% 
+  mutate(relProp = count / nrow(d)) %>% 
+  print() %>% 
   ggplot(aes(x = ethnicity, y = count)) +
   geom_bar(stat = 'identity', color = 'black', fill = 'light grey') +
   theme_bw() +
@@ -113,6 +119,8 @@ d %>%
 d %>% 
   group_by(vision) %>% 
   summarize(count = n()) %>% 
+  mutate(relProp = count / nrow(d)) %>% 
+  print() %>% 
   ggplot(aes(x = vision, y = count)) +
   geom_bar(stat = 'identity', color = 'black', fill = 'light grey') +
   theme_bw() +
