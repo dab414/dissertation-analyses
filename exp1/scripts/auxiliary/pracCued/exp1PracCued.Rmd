@@ -69,6 +69,10 @@ sMeans <- d %>%
   group_by(subject, transition) %>% 
   summarize(error = mean(error))
 
+sMeans %>% 
+  group_by(transition) %>% 
+  summarize(err = mean(error), se = sd(error) / sqrt(N))
+
 t1 <- t.test(sMeans[sMeans$transition == 'repeat',]$error, sMeans[sMeans$transition == 'switch',]$error, paired = TRUE)
 t1
 ```
@@ -108,6 +112,10 @@ trimmingSummary
 sMeans <- d %>% 
   group_by(subject, transition) %>% 
   summarize(rt = mean(rt))
+
+sMeans %>% 
+  group_by(transition) %>% 
+  summarize(Response.Time = mean(rt), se = sd(rt) / sqrt(N))
 
 t1 <- t.test(sMeans[sMeans$transition == 'repeat',]$rt, sMeans[sMeans$transition == 'switch',]$rt, paired = TRUE)
 t1

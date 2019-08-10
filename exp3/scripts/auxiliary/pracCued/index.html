@@ -1729,7 +1729,7 @@ $(document).ready(function () {
 </div>
 
 
-<p><em>This document was last updated at 2019-08-10 17:22:46.</em></p>
+<p><em>This document was last updated at 2019-08-10 17:51:29.</em></p>
 <p>This document is dedicated to analyzing the data from the practice cued task switching portion of Experiment 3. Subjects performed 9, 17-trial cycles of cued tasks switching, for a total of 153 trials. I’m going to trim these data the same way that the perforamnce data for DST data was trimmed, and then perform two paired t-tests were transition predicts (1) RT and (2) error rate.</p>
 <pre class="r"><code>d &lt;- read.csv('../../../data/pracCued.csv')
 badSubjects &lt;- read.csv('../../../data/badSubjects.csv')
@@ -1773,7 +1773,15 @@ trimmingSummary</code></pre>
   group_by(subject, transition) %&gt;% 
   summarize(error = mean(error))
 
-t1 &lt;- t.test(sMeans[sMeans$transition == 'repeat',]$error, sMeans[sMeans$transition == 'switch',]$error, paired = TRUE)
+sMeans %&gt;% 
+  group_by(transition) %&gt;% 
+  summarize(Err = mean(error), se = sd(error) / sqrt(N))</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["transition"],"name":[1],"type":["fctr"],"align":["left"]},{"label":["Err"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["se"],"name":[3],"type":["dbl"],"align":["right"]}],"data":[{"1":"repeat","2":"0.03831412","3":"0.01125979"},{"1":"switch","2":"0.05883232","3":"0.02153822"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code>t1 &lt;- t.test(sMeans[sMeans$transition == 'repeat',]$error, sMeans[sMeans$transition == 'switch',]$error, paired = TRUE)
 t1</code></pre>
 <pre><code>## 
 ##  Paired t-test
@@ -1821,7 +1829,15 @@ trimmingSummary</code></pre>
   group_by(subject, transition) %&gt;% 
   summarize(rt = mean(rt))
 
-t1 &lt;- t.test(sMeans[sMeans$transition == 'repeat',]$rt, sMeans[sMeans$transition == 'switch',]$rt, paired = TRUE)
+sMeans %&gt;% 
+  group_by(transition) %&gt;% 
+  summarize(Response.Time = mean(rt), se = sd(rt) / sqrt(N))</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["transition"],"name":[1],"type":["fctr"],"align":["left"]},{"label":["Response.Time"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["se"],"name":[3],"type":["dbl"],"align":["right"]}],"data":[{"1":"repeat","2":"1052.528","3":"48.39696"},{"1":"switch","2":"1385.583","3":"125.32939"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code>t1 &lt;- t.test(sMeans[sMeans$transition == 'repeat',]$rt, sMeans[sMeans$transition == 'switch',]$rt, paired = TRUE)
 t1</code></pre>
 <pre><code>## 
 ##  Paired t-test
