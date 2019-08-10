@@ -8,6 +8,6 @@ rmarkdown::render(input = 'preprocessing/exp3Preprocessing.Rmd', output_file = '
 
 #rmarkdown::render(input = 'exploratory/rapidFire/exp2RapidFire.Rmd', output_file = 'index.html')
 
-#rmarkdown::render(input = 'demo/exp2Demo.Rmd', output_file = 'index.html')
+rmarkdown::render(input = 'demo/exp3Demo.Rmd', output_file = 'index.html')
 
 #rmarkdown::render(input = 'confirmatory/choice/exp2ConfirmatoryChoice.Rmd', output_file = 'index.html')

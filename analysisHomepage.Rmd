@@ -66,5 +66,20 @@ Coming soon.
 * [Demographics Summary](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/demo/){target=_blank}  
   * A summary of the basic information collected in the survey at the end of the experiment.
 
+## Experiment 3
+
+### Preprocessing  
+* [Preprocessing](https://davebraun.org/dissertation/experiments/analysis/exp3/scripts/preprocessing/){target=_blank}  
+  * The basic subject and RT-based trial trimming that was proposed in the document.  
+
+
+### Demographics Summary
+* [Demographics Summary](https://davebraun.org/dissertation/experiments/analysis/exp3/scripts/demo/){target=_blank}  
+  * A summary of the basic information collected in the survey at the end of the experiment.
+
+
+
+
+
 
 

@@ -149,6 +149,10 @@ Workers below the 35% error rate threshold:
 bad
 ```
 
+```{r}
+source('../identitiesAndRejections/computeRejectList.r')
+```
+
 
 Plot the clustering of humans and bots (although, I don't expect there to be many bots this time because I implemented something in the experiment to prevent them).
 
@@ -158,7 +162,7 @@ rejectList <- read.csv('../identitiesAndRejections/rejectList.csv')
 rejectList <- ifelse(nrow(rejectList) > 0, rejectList$subject, -99)
 
 dst %>%
-  mutate(isBot = ifelse(subject %in% rejectList, 'Bot', 'Human')) %>% 
+      mutate(isBot = ifelse(subject %in% rejectList, 'Bot', 'Human')) %>% 
   filter(cuedRt < 10000) %>% 
   group_by(subject) %>% 
   summarize(error = mean(error), rt = mean(cuedRt), isBot = unique(isBot)) %>% 
