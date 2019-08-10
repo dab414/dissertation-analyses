@@ -63,6 +63,7 @@ Coming soon.
 
 ### Exploratory
 * [Exploratory Rapid Fire Choice Analysis](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/exploratory/rapidFire/){target=_blank}  
+  * Exploring the choice data from the rapid fire phase, and making subject-wise exclusions based on choice data from both DST and rapid fire.
 * [Exploratory Random Effects Analysis](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/exploratory/randomEffects/){target=_blank}
   * Fitting generalized linear mixed models to the choice data in an effort to control for between-subject variance in the predicted effects.
 
@@ -76,6 +77,17 @@ Coming soon.
 * [Preprocessing](https://davebraun.org/dissertation/experiments/analysis/exp3/scripts/preprocessing/){target=_blank}  
   * The basic subject and RT-based trial trimming that was proposed in the document.  
 
+### Confirmatory
+* [Confirmatory Choice Analyses](https://davebraun.org/dissertation/experiments/analysis/exp3/scripts/confirmatory/choice/){target=_blank}  
+  * The core 2 (difficulty) X 2 (difference) ANOVA that was proposed in the document.  
+
+### Auxiliary  
+* [Practice Cued Task Switching Analysis](https://davebraun.org/dissertation/experiments/analysis/exp3/scripts/auxiliary/pracCued/){target=_blank}  
+  * Testing for the switch cost for both RTs and error rates.
+
+### Exploratory
+* [Exploratory Rapid Fire Choice Analysis](https://davebraun.org/dissertation/experiments/analysis/exp3/scripts/exploratory/rapidFire/){target=_blank}  
+  * Exploring the choice data from the rapid fire phase, and making subject-wise exclusions based on choice data from both DST and rapid fire.
 
 ### Demographics Summary
 * [Demographics Summary](https://davebraun.org/dissertation/experiments/analysis/exp3/scripts/demo/){target=_blank}  
