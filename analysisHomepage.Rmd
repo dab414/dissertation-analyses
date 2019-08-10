@@ -33,7 +33,8 @@ My aspirations for this document are to make a multi-layered experience, where y
   * The 2 (difficulty) X 2 (difference) X 2 (transition) ANOVA (on RTs) that was proposed in the document.  
 
 ### Auxiliary Analyses
-* [Practice Cued Task Switching Analysis](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/auxiliary/pracCued/){target=_blank}
+* [Practice Cued Task Switching Analysis](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/auxiliary/pracCued/){target=_blank}  
+  * Testing for the switch cost for both RTs and error rates.
 * [Moving Reference Point Analysis](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/auxiliary/movingReference/){target=_blank}  
   * An analysis of whether the reference point might be shifting over time by looking for evidence of order effects in the choice data.  
 * [Learning Rate Analysis](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/auxiliary/learning/){target=_blank}  
@@ -57,7 +58,8 @@ Coming soon.
 * [Confirmatory Performance Analyses](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/confirmatory/performance){target=_blank}
 
 ### Auxiliary  
-* [Practice Cued Task Switching Analysis](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/auxiliary/pracCued/){target=_blank}
+* [Practice Cued Task Switching Analysis](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/auxiliary/pracCued/){target=_blank}  
+  * Testing for the switch cost for both RTs and error rates.
 
 ### Exploratory
 * [Exploratory Rapid Fire Choice Analysis](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/exploratory/rapidFire/){target=_blank}  
