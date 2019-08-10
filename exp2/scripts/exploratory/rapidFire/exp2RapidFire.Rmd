@@ -33,7 +33,7 @@ This document is dedicated to exploring the Experiment 2 choice data from the ra
 Load and view the rapid fire data:
 
 ```{r}
-dst <- read.csv('../../../data/dstCleanChoice.csv')
+dst <- read.csv('../../../data/dstCleanChoice1.csv')
 rapidFire <- read.csv('../../../data/rapidFireClean.csv')
 N <- dst %>% 
   group_by(subject) %>% 
@@ -140,6 +140,7 @@ s <- data.table(d)[phase == 'rfChoiceRt', .(rt = mean(rt)), by = subject][rt < 2
 badRfSubjects <- data.frame(subject = s, reason = rep('Spammed through rapid fire phase', length(s)))
 ```
 
+I'm dropping that small cluster of subjects from the rapid fire data with extremely low RTs and SDs.
 
 ```{r}
 d %>% 
@@ -223,7 +224,7 @@ d %>%
         panel.grid = element_blank(),
         strip.background = element_rect(fill = 'white', color = 'black'))
 ```
-
+I'm dropping all subjects who are more extreme than the blue line (+2 SDs) for both rapid fire and DST.
 ```{r}
 s <- data.table(d)[totalBias > dstCutoff & phase == 'Demand Selection Phase',as.numeric(subject)]
 badDstSubjects <- data.frame(subject = s, reason = rep('Exceeded choice location bias in DST phase', length(s)))
@@ -300,6 +301,10 @@ plotData %>%
   theme_bw() +
   theme(strip.background = element_rect(fill = 'white', color = 'black'))
 ```
+```{r}
+badDstSubjects
+badRfSubjects
+```
 
 
 ```{r}
@@ -313,7 +318,7 @@ head(d)
 
 paste('Final N for quality choice is', d[,.N, by = subject][,.N])
 
-write.csv(d, '../../../data/aggregatedChoice.csv', row.names = FALSE)
+write.csv(d, '../../../data/dstCleanChoice2.csv', row.names = FALSE)
 ```
 
 
