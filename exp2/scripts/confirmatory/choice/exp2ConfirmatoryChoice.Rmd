@@ -1,5 +1,5 @@
 ---
-title: "Experiment 2 Confirmatory Choice Analyses"
+title: "`r paste('Experiment', ifelse(stringr::str_detect(getwd(), 'exp3'), 3, 2), 'Confirmatory Choice Analyses')`"
 author: "Dave Braun"
 date: "7/21/2019"
 output: 
@@ -25,7 +25,7 @@ source('../../formatSimpleEffects.r')
 
 *This document was last updated at `r Sys.time()`.*
 
-This document is dedicated to the confirmatory choice analyses that were proposed for Experiment 2.
+This document is dedicated to the confirmatory choice analyses that were proposed for Experiment `r ifelse(stringr::str_detect(getwd(), 'exp3'), 3, 2)`. 
 
 ## Design
 The design is 2 (difficulty: easier than reference vs. harder than reference) X 2 (difference: moderate vs. extreme). The analysis is a 2 X 2 within-subjects ANOVA on the proportion selection of the safe deck.  
@@ -50,6 +50,8 @@ dst
 ```
 
 **The sample size is `r n`.**
+
+The analyses below are broken down by different trimming criterion. The first tab (no trimming) has no trimming, the second tab has trimming according to to +/- 2 SDs on participant-wise cued RT means (see [here](../../preprocessing/)), the third tab has trimming according to participant-wise exclusions based on choice (see [here](../../exploratory/rapidFire)).
 
 # Choice Trimming Criteria {.tabset}
 
@@ -107,13 +109,7 @@ dst %>%
 
 Visualize subject data underlying the difficulty variable:
 
-```{r}
-condMeans <- dst %>% 
-  group_by(subject, difficulty) %>% 
-  summarize(ssd = mean(selSafeDeck)) %>% 
-  group_by(difficulty) %>% 
-  summarize(ssd = mean(ssd))
-
+```{r eval = FALSE}
 uSubjects <- unique(dst$subject)
 
 subjectCode <- data.frame(subject = uSubjects)
@@ -148,24 +144,30 @@ dst <- subjectCode %>%
 
 ```{r}
 
-dst %>% 
-  group_by(subject, subjectLabel) %>% 
-  summarize(count = n()) %>% 
-  group_by(subjectLabel) %>% 
-  summarize(count = n())
+condMeans <- dst %>% 
+  group_by(subject, difficulty) %>% 
+  summarize(ssd = mean(selSafeDeck)) %>% 
+  group_by(difficulty) %>% 
+  summarize(ssd = mean(ssd))
+
+# dst %>% 
+#   group_by(subject, subjectLabel) %>% 
+#   summarize(count = n()) %>% 
+#   group_by(subjectLabel) %>% 
+#   summarize(count = n())
 
 dst %>% 
   group_by(subject, difficulty) %>% 
-  summarize(ssd = mean(selSafeDeck), subjectLabel = unique(subjectLabel)) %>% 
+  summarize(ssd = mean(selSafeDeck)) %>% 
   ggplot(aes(x = difficulty, y = ssd)) +
   geom_violin(fill = NA, alpha = 0.2) + 
   geom_boxplot(fill = NA, alpha = 0.3) +
   geom_jitter(alpha = 0.4, width = .05, height = 0) +
-  geom_line(aes(group = subject, color = subjectLabel), linetype = 'dashed', alpha = .3) +
+  geom_line(aes(group = subject), linetype = 'dashed', alpha = .3) +
   geom_point(data = condMeans, aes(x = difficulty, y = ssd), size = 4, shape = 23, color = 'black', fill = 'red') +
   geom_hline(yintercept = 0.5, linetype = 'dotted') +
   geom_label(data = condMeans, aes(x = difficulty, y = ssd, label = round(ssd, 2)), hjust = 1.5, vjust = 1.5) +
-  scale_color_manual(name = 'Subject Label', values = c(`Supports prospect theory` = 'dark green', `Opposite prospect theory` = 'red', `No difference` = 'black')) +
+  #scale_color_manual(name = 'Subject Label', values = c(`Supports prospect theory` = 'dark green', `Opposite prospect theory` = 'red', `No difference` = 'black')) +
   ylim(0,1) + 
   theme_bw() +
   labs(
@@ -198,6 +200,8 @@ dst %>%
 ```
 
 
+**Simple effect of difficulty across difference conditions**
+
 Following up on the marginal interaction by comparing the two extreme conditions:
 
 ```{r}
@@ -212,6 +216,54 @@ s <- 'Simple effect of difficulty for Extreme difference'
 r <- formatSimpleEffects(omnibusParams = omnibusParams, model = m2)
 data.frame(Contrast = s, Result = r)
 ```
+
+And comparing the two moderate conditions
+
+```{r}
+DFd <- m1$ANOVA$DFd[4]
+SSd <- m1$ANOVA$SSd[4]
+MSe <- SSd / DFd
+omnibusParams <- c(DFd = DFd, SSd = SSd, MSe = MSe)
+
+m2 <- ezANOVA(wid = subject, within = .(difficulty), dv = selSafeDeck, data = dst[dst$difference == 'Moderate',], detailed = TRUE)
+
+s <- 'Simple effect of difficulty for Moderate difference'
+r <- formatSimpleEffects(omnibusParams = omnibusParams, model = m2)
+data.frame(Contrast = s, Result = r)
+```
+
+**Simple effects of difference across difficulty conditions**
+
+Effect of difference for easier than reference difficulty.
+
+```{r}
+DFd <- m1$ANOVA$DFd[4]
+SSd <- m1$ANOVA$SSd[4]
+MSe <- SSd / DFd
+omnibusParams <- c(DFd = DFd, SSd = SSd, MSe = MSe)
+
+m2 <- ezANOVA(wid = subject, within = .(difference), dv = selSafeDeck, data = dst[dst$difficulty == 'Easier than Reference',], detailed = TRUE)
+
+s <- 'Simple effect of difference for easier than reference difficulty'
+r <- formatSimpleEffects(omnibusParams = omnibusParams, model = m2)
+data.frame(Contrast = s, Result = r)
+```
+
+Effect of difference for easier than reference difficulty.
+
+```{r}
+DFd <- m1$ANOVA$DFd[4]
+SSd <- m1$ANOVA$SSd[4]
+MSe <- SSd / DFd
+omnibusParams <- c(DFd = DFd, SSd = SSd, MSe = MSe)
+
+m2 <- ezANOVA(wid = subject, within = .(difference), dv = selSafeDeck, data = dst[dst$difficulty == 'Harder than Reference',], detailed = TRUE)
+
+s <- 'Simple effect of difference for harder than reference difficulty'
+r <- formatSimpleEffects(omnibusParams = omnibusParams, model = m2)
+data.frame(Contrast = s, Result = r)
+```
+
 
 ## Trial trimming
 
@@ -269,61 +321,61 @@ dst %>%
 
 Visualize subject data underlying the difficulty variable:
 
-```{r}
-condMeans <- dst %>% 
-  group_by(subject, difficulty) %>% 
-  summarize(ssd = mean(selSafeDeck)) %>% 
-  group_by(difficulty) %>% 
-  summarize(ssd = mean(ssd))
-
-uSubjects <- unique(dst$subject)
-
-subjectCode <- data.frame(subject = uSubjects)
-subjectCode$subjectLabel <- factor('', levels = c('Supports prospect theory', 'Opposite prospect theory', 'No difference'))
-
-for (i in uSubjects) {
-  t <- dst[dst$subject == i, c('difficulty', 'selSafeDeck')]
-  mns <- c(e = mean(t[t$difficulty == 'Easier than Reference',]$selSafeDeck), h = mean(t[t$difficulty == 'Harder than Reference',]$selSafeDeck))
-  
-  
-  if (mns[1] != mns[2]) {
-    m1 <- t.test(t[t$difficulty == 'Easier than Reference',]$selSafeDeck, t[t$difficulty == 'Harder than Reference',]$selSafeDeck, within = TRUE)
-  } else {
-    subjectCode[subjectCode$subject == i,]$subjectLabel <- 'No difference'
-    next
-  }
-  
-  if (mns['e'] > mns['h'] & m1$p.value < .05) {
-    subjectCode[subjectCode$subject == i,]$subjectLabel <- 'Supports prospect theory'
-  } else if (mns['e'] < mns['h'] & m1$p.value < .05) {
-    subjectCode[subjectCode$subject == i,]$subjectLabel <- 'Opposite prospect theory'
-  } else {
-    subjectCode[subjectCode$subject == i,]$subjectLabel <- 'No difference'
-  }
-} 
-
-dst <- subjectCode %>% 
-  inner_join(dst)
+```{r eval = FALSE, include = FALSE}
+# uSubjects <- unique(dst$subject)
+# 
+# subjectCode <- data.frame(subject = uSubjects)
+# subjectCode$subjectLabel <- factor('', levels = c('Supports prospect theory', 'Opposite prospect theory', 'No difference'))
+# 
+# for (i in uSubjects) {
+#   t <- dst[dst$subject == i, c('difficulty', 'selSafeDeck')]
+#   mns <- c(e = mean(t[t$difficulty == 'Easier than Reference',]$selSafeDeck), h = mean(t[t$difficulty == 'Harder than Reference',]$selSafeDeck))
+#   
+#   
+#   if (mns[1] != mns[2]) {
+#     m1 <- t.test(t[t$difficulty == 'Easier than Reference',]$selSafeDeck, t[t$difficulty == 'Harder than Reference',]$selSafeDeck, within = TRUE)
+#   } else {
+#     subjectCode[subjectCode$subject == i,]$subjectLabel <- 'No difference'
+#     next
+#   }
+#   
+#   if (mns['e'] > mns['h'] & m1$p.value < .05) {
+#     subjectCode[subjectCode$subject == i,]$subjectLabel <- 'Supports prospect theory'
+#   } else if (mns['e'] < mns['h'] & m1$p.value < .05) {
+#     subjectCode[subjectCode$subject == i,]$subjectLabel <- 'Opposite prospect theory'
+#   } else {
+#     subjectCode[subjectCode$subject == i,]$subjectLabel <- 'No difference'
+#   }
+# } 
+# 
+# dst <- subjectCode %>% 
+#   inner_join(dst)
 
 
 ```
 
 ```{r}
 
-dst %>% 
-  group_by(subject, subjectLabel) %>% 
-  summarize(count = n()) %>% 
-  group_by(subjectLabel) %>% 
-  summarize(count = n())
+condMeans <- dst %>% 
+  group_by(subject, difficulty) %>% 
+  summarize(ssd = mean(selSafeDeck)) %>% 
+  group_by(difficulty) %>% 
+  summarize(ssd = mean(ssd))
+
+# dst %>% 
+#   group_by(subject, subjectLabel) %>% 
+#   summarize(count = n()) %>% 
+#   group_by(subjectLabel) %>% 
+#   summarize(count = n())
 
 dst %>% 
   group_by(subject, difficulty) %>% 
-  summarize(ssd = mean(selSafeDeck), subjectLabel = unique(subjectLabel)) %>% 
+  summarize(ssd = mean(selSafeDeck)) %>% 
   ggplot(aes(x = difficulty, y = ssd)) +
   geom_violin(fill = NA, alpha = 0.2) + 
   geom_boxplot(fill = NA, alpha = 0.3) +
   geom_jitter(alpha = 0.4, width = .05, height = 0) +
-  geom_line(aes(group = subject, color = subjectLabel), linetype = 'dashed', alpha = .3) +
+  geom_line(aes(group = subject), linetype = 'dashed', alpha = .3) +
   geom_point(data = condMeans, aes(x = difficulty, y = ssd), size = 4, shape = 23, color = 'black', fill = 'red') +
   geom_hline(yintercept = 0.5, linetype = 'dotted') +
   geom_label(data = condMeans, aes(x = difficulty, y = ssd, label = round(ssd, 2)), hjust = 1.5, vjust = 1.5) +
@@ -360,6 +412,9 @@ dst %>%
 ```
 
 
+
+**Simple effect of difficulty across difference conditions**
+
 Following up on the marginal interaction by comparing the two extreme conditions:
 
 ```{r}
@@ -374,6 +429,54 @@ s <- 'Simple effect of difficulty for Extreme difference'
 r <- formatSimpleEffects(omnibusParams = omnibusParams, model = m2)
 data.frame(Contrast = s, Result = r)
 ```
+
+And comparing the two moderate conditions
+
+```{r}
+DFd <- m1$ANOVA$DFd[4]
+SSd <- m1$ANOVA$SSd[4]
+MSe <- SSd / DFd
+omnibusParams <- c(DFd = DFd, SSd = SSd, MSe = MSe)
+
+m2 <- ezANOVA(wid = subject, within = .(difficulty), dv = selSafeDeck, data = dst[dst$difference == 'Moderate',], detailed = TRUE)
+
+s <- 'Simple effect of difficulty for Moderate difference'
+r <- formatSimpleEffects(omnibusParams = omnibusParams, model = m2)
+data.frame(Contrast = s, Result = r)
+```
+
+**Simple effects of difference across difficulty conditions**
+
+Effect of difference for easier than reference difficulty.
+
+```{r}
+DFd <- m1$ANOVA$DFd[4]
+SSd <- m1$ANOVA$SSd[4]
+MSe <- SSd / DFd
+omnibusParams <- c(DFd = DFd, SSd = SSd, MSe = MSe)
+
+m2 <- ezANOVA(wid = subject, within = .(difference), dv = selSafeDeck, data = dst[dst$difficulty == 'Easier than Reference',], detailed = TRUE)
+
+s <- 'Simple effect of difference for easier than reference difficulty'
+r <- formatSimpleEffects(omnibusParams = omnibusParams, model = m2)
+data.frame(Contrast = s, Result = r)
+```
+
+Effect of difference for easier than reference difficulty.
+
+```{r}
+DFd <- m1$ANOVA$DFd[4]
+SSd <- m1$ANOVA$SSd[4]
+MSe <- SSd / DFd
+omnibusParams <- c(DFd = DFd, SSd = SSd, MSe = MSe)
+
+m2 <- ezANOVA(wid = subject, within = .(difference), dv = selSafeDeck, data = dst[dst$difficulty == 'Harder than Reference',], detailed = TRUE)
+
+s <- 'Simple effect of difference for harder than reference difficulty'
+r <- formatSimpleEffects(omnibusParams = omnibusParams, model = m2)
+data.frame(Contrast = s, Result = r)
+```
+
 
 ## Choice-based subject trimming
 
@@ -430,13 +533,7 @@ dst %>%
 
 Visualize subject data underlying the difficulty variable:
 
-```{r}
-condMeans <- dst %>% 
-  group_by(subject, difficulty) %>% 
-  summarize(ssd = mean(selSafeDeck)) %>% 
-  group_by(difficulty) %>% 
-  summarize(ssd = mean(ssd))
-
+```{r eval = FALSE}
 uSubjects <- unique(dst$subject)
 
 subjectCode <- data.frame(subject = uSubjects)
@@ -471,24 +568,30 @@ dst <- subjectCode %>%
 
 ```{r}
 
-dst %>% 
-  group_by(subject, subjectLabel) %>% 
-  summarize(count = n()) %>% 
-  group_by(subjectLabel) %>% 
-  summarize(count = n())
+condMeans <- dst %>% 
+  group_by(subject, difficulty) %>% 
+  summarize(ssd = mean(selSafeDeck)) %>% 
+  group_by(difficulty) %>% 
+  summarize(ssd = mean(ssd))
+# 
+# dst %>% 
+#   group_by(subject, subjectLabel) %>% 
+#   summarize(count = n()) %>% 
+#   group_by(subjectLabel) %>% 
+#   summarize(count = n())
 
 dst %>% 
   group_by(subject, difficulty) %>% 
-  summarize(ssd = mean(selSafeDeck), subjectLabel = unique(subjectLabel)) %>% 
+  summarize(ssd = mean(selSafeDeck)) %>% 
   ggplot(aes(x = difficulty, y = ssd)) +
   geom_violin(fill = NA, alpha = 0.2) + 
   geom_boxplot(fill = NA, alpha = 0.3) +
   geom_jitter(alpha = 0.4, width = .05, height = 0) +
-  geom_line(aes(group = subject, color = subjectLabel), linetype = 'dashed', alpha = .3) +
+  geom_line(aes(group = subject), linetype = 'dashed', alpha = .3) +
   geom_point(data = condMeans, aes(x = difficulty, y = ssd), size = 4, shape = 23, color = 'black', fill = 'red') +
   geom_hline(yintercept = 0.5, linetype = 'dotted') +
   geom_label(data = condMeans, aes(x = difficulty, y = ssd, label = round(ssd, 2)), hjust = 1.5, vjust = 1.5) +
-  scale_color_manual(name = 'Subject Label', values = c(`Supports prospect theory` = 'dark green', `Opposite prospect theory` = 'red', `No difference` = 'black')) +
+  #scale_color_manual(name = 'Subject Label', values = c(`Supports prospect theory` = 'dark green', `Opposite prospect theory` = 'red', `No difference` = 'black')) +
   ylim(0,1) + 
   theme_bw() +
   labs(
@@ -521,6 +624,9 @@ dst %>%
 ```
 
 
+
+**Simple effect of difficulty across difference conditions**
+
 Following up on the marginal interaction by comparing the two extreme conditions:
 
 ```{r}
@@ -536,7 +642,52 @@ r <- formatSimpleEffects(omnibusParams = omnibusParams, model = m2)
 data.frame(Contrast = s, Result = r)
 ```
 
+And comparing the two moderate conditions
 
+```{r}
+DFd <- m1$ANOVA$DFd[4]
+SSd <- m1$ANOVA$SSd[4]
+MSe <- SSd / DFd
+omnibusParams <- c(DFd = DFd, SSd = SSd, MSe = MSe)
+
+m2 <- ezANOVA(wid = subject, within = .(difficulty), dv = selSafeDeck, data = dst[dst$difference == 'Moderate',], detailed = TRUE)
+
+s <- 'Simple effect of difficulty for Moderate difference'
+r <- formatSimpleEffects(omnibusParams = omnibusParams, model = m2)
+data.frame(Contrast = s, Result = r)
+```
+
+**Simple effects of difference across difficulty conditions**
+
+Effect of difference for easier than reference difficulty.
+
+```{r}
+DFd <- m1$ANOVA$DFd[4]
+SSd <- m1$ANOVA$SSd[4]
+MSe <- SSd / DFd
+omnibusParams <- c(DFd = DFd, SSd = SSd, MSe = MSe)
+
+m2 <- ezANOVA(wid = subject, within = .(difference), dv = selSafeDeck, data = dst[dst$difficulty == 'Easier than Reference',], detailed = TRUE)
+
+s <- 'Simple effect of difference for easier than reference difficulty'
+r <- formatSimpleEffects(omnibusParams = omnibusParams, model = m2)
+data.frame(Contrast = s, Result = r)
+```
+
+Effect of difference for easier than reference difficulty.
+
+```{r}
+DFd <- m1$ANOVA$DFd[4]
+SSd <- m1$ANOVA$SSd[4]
+MSe <- SSd / DFd
+omnibusParams <- c(DFd = DFd, SSd = SSd, MSe = MSe)
+
+m2 <- ezANOVA(wid = subject, within = .(difference), dv = selSafeDeck, data = dst[dst$difficulty == 'Harder than Reference',], detailed = TRUE)
+
+s <- 'Simple effect of difference for harder than reference difficulty'
+r <- formatSimpleEffects(omnibusParams = omnibusParams, model = m2)
+data.frame(Contrast = s, Result = r)
+```
 
 
 

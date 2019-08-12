@@ -1,5 +1,5 @@
 ---
-title: "Experiment 2 Practice Cued Task Switching Analyses"
+title: "`r paste('Experiment', ifelse(stringr::str_detect(getwd(), 'exp3'), 3, 2), 'Practice Cued Task Switching Analyses')`"
 author: "Dave Braun"
 date: "7/21/2019"
 output: 
@@ -18,7 +18,7 @@ knit:
 
 *This document was last updated at `r Sys.time()`.*
 
-This document is dedicated to analyzing the data from the practice cued task switching portion of Experiment 2. Subjects performed 9, 17-trial cycles of cued tasks switching, for a total of 153 trials. I'm going to trim these data the same way that the perforamnce data for DST data was trimmed, and then perform two paired t-tests were transition predicts (1) RT and (2) error rate.
+This document is dedicated to analyzing the data from the practice cued task switching portion of Experiment `r ifelse(stringr::str_detect(getwd(), 'exp3'), 3, 2)`. Subjects performed 9, 17-trial cycles of cued tasks switching, for a total of 153 trials. I'm going to trim these data the same way that the perforamnce data for DST data was trimmed, and then perform two paired t-tests were transition predicts (1) RT and (2) error rate.
 
 ```{r include = FALSE}
 library(tidyverse)

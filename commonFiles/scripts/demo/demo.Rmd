@@ -1,0 +1,158 @@
+---
+title: "`r paste('Experiment', ifelse(stringr::str_detect(getwd(), 'exp3'), 3, 2), 'Demographic Summary')`"
+author: "Dave Braun"
+date: "7/21/2019"
+output: 
+  html_document:
+    code_folding: hide
+    df_print: paged
+    includes:
+      after_body: ../../../footer.html
+      in_header: ../../../favicon.html
+knit:
+  (function(inputFile, encoding) {
+      rmarkdown::render(inputFile,
+                    encoding = encoding,
+                    output_file = 'index.html')})
+---
+```{r include = FALSE}
+library(tidyverse)
+```
+```{r include = FALSE, eval = FALSE}
+setwd('/home/dave/OneDrive/Research/By Project/Dissertation/experiments/analysis/exp2/scripts/demo/')
+```
+
+
+
+This document is dedicated to summarizing the demographic data from Experiment `r ifelse(stringr::str_detect(getwd(), 'exp3'), 3, 2)`.  
+
+The following information was collected:  
+
+* Age  
+* Gender identity  
+* Race  
+* Ethnicity  
+* Vision  
+* Open text comments
+
+The data can be seen below:
+
+```{r}
+d <- read.csv('../../data/demoClean.csv')
+n <- nrow(d)
+d
+```
+**The sample size is `r n`.**
+
+## Age
+
+```{r}
+d <- d %>% 
+  filter(!(is.na(age)))
+mAge <- mean(d$age)
+sdAge <- sd(d$age)
+
+d %>% 
+  ggplot(aes(x = age)) +
+  geom_histogram(color = 'black', fill = 'light grey') +
+  geom_vline(xintercept = mAge, linetype = 'dashed') +
+  annotate('text', x = mAge + 5, y = 13, label = paste('Mean:', round(mAge, 2))) +
+  annotate('text', x = mAge + 5, y = 12, label = paste('SD:', round(sdAge, 2))) +
+  theme_bw() + 
+  xlab('Age (In years)') +
+  ylab('Frequency')
+
+```
+
+
+
+## Gender Identity
+
+```{r}
+d %>% 
+  group_by(gender) %>% 
+  summarize(count = n()) %>% 
+  mutate(relProp = count / nrow(d)) %>% 
+  print() %>% 
+  ggplot(aes(x = gender, y = count)) +
+  geom_bar(stat = 'identity', color = 'black', fill = 'light grey') +
+  theme_bw() +
+  xlab('Gender Identity') + 
+  ylab('Count')
+```
+
+## Race
+
+```{r}
+d %>% 
+  group_by(race) %>% 
+  summarize(count = n()) %>% 
+  mutate(relProp = count / nrow(d)) %>% 
+  print() %>% 
+  ggplot(aes(x = race, y = count)) +
+  geom_bar(stat = 'identity', color = 'black', fill = 'light grey') +
+  theme_bw() +
+  xlab('Racial Identity') + 
+  ylab('Count')
+```
+
+
+## Ethnicity
+
+```{r}
+d %>% 
+  group_by(ethnicity) %>% 
+  summarize(count = n()) %>% 
+  mutate(relProp = count / nrow(d)) %>% 
+  print() %>% 
+  ggplot(aes(x = ethnicity, y = count)) +
+  geom_bar(stat = 'identity', color = 'black', fill = 'light grey') +
+  theme_bw() +
+  xlab('Ethnicity') + 
+  ylab('Count')
+```
+
+
+## Vision
+
+```{r}
+d %>% 
+  group_by(vision) %>% 
+  summarize(count = n()) %>% 
+  mutate(relProp = count / nrow(d)) %>% 
+  print() %>% 
+  ggplot(aes(x = vision, y = count)) +
+  geom_bar(stat = 'identity', color = 'black', fill = 'light grey') +
+  theme_bw() +
+  xlab('Vision') + 
+  ylab('Count')
+```
+
+
+
+## Open Comments
+
+```{r}
+for (i in 1:(nrow(d))) {
+  print('')
+  print(paste('Subject:', d[i,]$subject))
+  print(as.character(d[i,]$comments))
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

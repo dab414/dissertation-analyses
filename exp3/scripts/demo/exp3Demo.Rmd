@@ -1,7 +1,7 @@
 ---
-title: "Experiment 3 Demographic Summary"
+title: "`r paste('Experiment', ifelse(stringr::str_detect(getwd(), 'exp3'), 3, 2), 'Demographic Summary')`"
 author: "Dave Braun"
-date: "8/10/2019"
+date: "7/21/2019"
 output: 
   html_document:
     code_folding: hide
@@ -24,7 +24,7 @@ setwd('/home/dave/OneDrive/Research/By Project/Dissertation/experiments/analysis
 
 
 
-This document is dedicated to summarizing the demographic data from Experiment 3.  
+This document is dedicated to summarizing the demographic data from Experiment `r ifelse(stringr::str_detect(getwd(), 'exp3'), 3, 2)`.  
 
 The following information was collected:  
 

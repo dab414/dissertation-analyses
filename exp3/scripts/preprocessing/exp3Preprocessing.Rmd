@@ -1,5 +1,5 @@
 ---
-title: "Experiment 3 Preprocessing"
+title: "`r paste('Experiment', ifelse(stringr::str_detect(getwd(), 'exp3'), 3, 2), 'Preprocessing')`"
 author: "Dave Braun"
 date: "7/24/2019"
 output: 
@@ -26,7 +26,7 @@ setwd('/home/dave/OneDrive/Research/By Project/Dissertation/experiments/analysis
 
 *This document was last updated at `r Sys.time()`.*
 
-This document is dedicated to preprocessing the data from Experiment 3.
+This document is dedicated to preprocessing the data from Experiment `r ifelse(stringr::str_detect(getwd(), 'exp3'), 3, 2)`.
 
 Import and view the data:
 
@@ -216,7 +216,7 @@ dst <- dst %>%
 
 print(paste('Number of rows after removing trials with RTs longer than 10 s:', nrow(dst)))
 
-badTrials <- data.frame('Data Dropped' = round(1 - (nrow(dst) / initialRows), 2), Reason = 'Cued trials longer than 10 s')
+badTrials <- data.frame('Data Dropped' = round(1 - (nrow(dst) / initialRows), 4), Reason = 'Cued trials longer than 10 s')
 
 badTrials
 
@@ -232,9 +232,9 @@ dst0 <- dst %>%
   filter(badcued == 0) %>% 
   select(-badcued)
 
-print(paste('Number of rows before removing trials where cued responses exceeded participant-wise cued RT cutoffs:', nrow(dst)))
+print(paste('Number of rows before removing trials where cued responses exceeded participant-wise cued RT cutoffs:', nrow(dst0)))
 
-badTrials <- rbind(badTrials, data.frame('Data Dropped' = round(1 - (nrow(dst) / initialRows), 2), Reason = 'Cued trials with RTs more extreme than two SDs beyond participant-wise means'))
+badTrials <- rbind(badTrials, data.frame('Data Dropped' = round(1 - (nrow(dst0) / initialRows), 4), Reason = 'Cued trials with RTs more extreme than two SDs beyond participant-wise means'))
 badTrials
 
 ```
@@ -246,13 +246,13 @@ Saving out multiple datasets, one with each different trimming criterion (ie, no
 ```{r}
 ## choice first
 ## keep only < 10 s
-initialRows <- nrow(dst)
+initialRows <- nrow(dst0)
 print(paste('Number of rows before removing trials where choices RTs exceeded 10 s', initialRows))
 dst1 <- dst0 %>% 
   filter(choiceRt < 10000)
 print(paste('Number of rows after removing trials where choices RTs exceeded 10 s', nrow(dst1)))
 
-badTrials <- rbind(badTrials, data.frame('Data Dropped' = round(1 - (nrow(dst) / initialRows), 2), Reason = 'Choice trials with with RTs  > 10 s'))
+badTrials <- rbind(badTrials, data.frame('Data Dropped' = round(1 - (nrow(dst1) / initialRows), 4), Reason = 'Choice trials with with RTs  > 10 s'))
 
 print(paste('Number of rows before removing trials where choices exceeded participant-wise choice RT cutoffs:', initialRows))
 
@@ -272,9 +272,9 @@ rapidFire <- rapidFire %>%
   filter(badChoice == 0) %>% 
   select(-badChoice, meanChoiceRt, sdChoiceRt)
 
-print(paste('Number of rows after removing trials where choices exceeded participant-wise choice RT cutoffs:', nrow(dst)))
+print(paste('Number of rows after removing trials where choices exceeded participant-wise choice RT cutoffs:', nrow(dst1)))
 
-badTrials <- rbind(badTrials, data.frame('Data Dropped' = round(1 - (nrow(dst) / initialRows), 2), Reason = 'Choice trials with RTs more extreme than two SDs beyond participant-wise means'))
+badTrials <- rbind(badTrials, data.frame('Data Dropped' = round(1 - (nrow(dst1) / initialRows), 2), Reason = 'Choice trials with RTs more extreme than two SDs beyond participant-wise means'))
 badTrials
 ```
 
@@ -292,7 +292,7 @@ Trimming out error trials and trials following error trials
 *I didn't actually say I'd trim trials following error trials in the document, so I might want to think about that some*
 
 ```{r}
-initialRows <- nrow(dst)
+initialRows <- nrow(dst0)
 print(paste('Number of rows before removing error trials and trials following error trials :', initialRows))
 
 dst0 <- dst0 %>% 
@@ -303,9 +303,9 @@ dst1 <- dst1 %>%
   mutate(errorTrim = ifelse(error | shift(error), 1, 0)) %>% 
   filter(errorTrim == 0)
 
-print(paste('Number of rows before removing error trials and trials following error trials :', nrow(dst)))
+print(paste('Number of rows before removing error trials and trials following error trials :', nrow(dst0)))
 
-badTrials <- rbind(badTrials, data.frame('Data Dropped' = round(1 - (nrow(dst) / initialRows), 2), Reason = 'Trimming error trials and trials following error trials'))
+badTrials <- rbind(badTrials, data.frame('Data Dropped' = round(1 - (nrow(dst0) / initialRows), 2), Reason = 'Trimming error trials and trials following error trials'))
 badTrials
 ```
 
@@ -353,7 +353,7 @@ dst1 <- dst1 %>%
             selectedRiskyDeck = unique(selectedRiskyDeck)) %>% 
   ungroup()
 
-write.csv(dst, '../../data/dstCleanChoice.csv', row.names = FALSE)
+write.csv(dst0, '../../data/dstCleanChoice.csv', row.names = FALSE)
 
 write.csv(dst1, '../../data/dstCleanChoice1.csv', row.names = FALSE)
 

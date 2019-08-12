@@ -1,0 +1,369 @@
+---
+title: "`r paste('Experiment', ifelse(stringr::str_detect(getwd(), 'exp3'), 3, 2), 'Preprocessing')`"
+author: "Dave Braun"
+date: "7/24/2019"
+output: 
+  html_document:
+    df_print: paged
+    includes:
+      after_body: ../../../footer.html
+      in_header: ../../../favicon.html
+knit:
+  (function(inputFile, encoding) {
+      rmarkdown::render(inputFile,
+                    encoding = encoding,
+                    output_file = 'index.html')})
+---
+```{r include = FALSE}
+library(tidyverse)
+library(data.table)
+library(ggridges)
+```
+```{r include = FALSE, eval = FALSE}
+setwd('/home/dave/OneDrive/Research/By Project/Dissertation/experiments/analysis/exp2/scripts/preprocessing/')
+```
+
+
+*This document was last updated at `r Sys.time()`.*
+
+This document is dedicated to preprocessing the data from Experiment `r ifelse(stringr::str_detect(getwd(), 'exp3'), 3, 2)`.
+
+Import and view the data:
+
+```{r}
+dst <- read.csv('../../data/dst.csv')
+demo <- read.csv('../../data/demo.csv')
+rapidFire <- read.csv('../../data/rapidFire.csv')
+pracCued <- read.csv('../../data/pracCued.csv')
+
+n <- nrow(demo)
+
+dst
+```
+
+**The initial sample size is `r n`.**
+
+## Run time
+For piloting purposes, I'm curious as to how long the experiment is running.  
+So far in piloting, I've implemented two different versions: one where there were 8 total cycles in DST and one with 10.  
+
+```{r}
+dstTrim <- dst %>% 
+  group_by(subject) %>% 
+  summarize(dstRunTimeMins = max(phaseRunTimeMins),
+            cycleThreshold = max(choiceTrial))
+
+rapidFireTrim <- rapidFire %>% 
+  group_by(subject) %>% 
+  summarize(rapidFireRunTimeMins = max(phaseRunTimeMins))
+
+pracCuedTrim <- pracCued %>% 
+  group_by(subject) %>% 
+  summarize(pracCuedRunTimeMins = max(runTimeMins))
+
+demoTrim <- demo %>% 
+  select(subject, totalTime_mins)
+
+d <- dstTrim %>% 
+  inner_join(rapidFireTrim) %>% 
+  inner_join(pracCuedTrim) %>% 
+  inner_join(demoTrim)
+
+d
+
+d %>% 
+  ggplot(aes(x = totalTime_mins)) +
+  geom_histogram(color = 'black', fill = 'light grey') +
+  labs(
+    x = 'Total Run Time in Experiment (mins)',
+    caption = 'Extreme long times usually suggest participant left and came back at some point'
+  ) +
+  theme_bw()
+
+```
+
+
+
+## Subject Exclusion
+Subjects will be excluded for:  
+
+* Not having normal or corrected-to-normal vision
+* Having error rates higher than 15%
+
+```{r}
+badSubjectsList <- demo[demo$vision == 'impaired',]$subject
+badSubjects <- data.frame(subject = badSubjectsList, reason = rep('Vision impaired', length(badSubjectsList)))
+
+badSubjectsList <- dst %>% 
+  group_by(subject) %>% 
+  summarize(error = mean(error))
+
+badSubjectsList %>% 
+  ggplot(aes(x = error)) + 
+  geom_histogram(color = 'black', fill = 'light grey', bins = ifelse(n < 10, 10, 30)) +
+  theme_bw() +
+  xlab('Mean Error Rates')
+```
+
+```{r}
+badSubjectsList <- badSubjectsList[badSubjectsList$error > .15,]$subject
+badSubjects <- rbind(badSubjects, data.frame(subject = badSubjectsList, reason = rep('Error rate higher than 15%', length(badSubjectsList))))
+write.csv(badSubjects, '../../data/badSubjects.csv', row.names = FALSE)
+badSubjects
+```
+
+Even though we're only analyzing data with less than 15% error rate, the criterion for accepting HITs was error rates over 35% (even though we told workers it was only 25%) or mean cued response times under 400 ms.
+
+
+```{r}
+good <- dst %>% 
+  filter(cuedRt < 10000) %>% 
+  group_by(subject) %>%
+  summarize(error = mean(error), rt = mean(cuedRt)) %>% 
+  filter(error < .35)
+
+bad <- dst %>% 
+  filter(cuedRt < 10000) %>% 
+  group_by(subject) %>%
+  summarize(error = mean(error), rt = mean(cuedRt)) %>% 
+  filter(error > .35)
+```
+
+Workers above the 35% error rate threshold:
+```{r}
+good
+```
+
+
+Workers below the 35% error rate threshold:
+```{r}
+bad
+```
+
+```{r}
+source('../identitiesAndRejections/computeRejectList.r')
+```
+
+
+Plot the clustering of humans and bots (although, I don't expect there to be many bots this time because I implemented something in the experiment to prevent them).
+
+```{r}
+rejectList <- read.csv('../identitiesAndRejections/rejectList.csv')
+
+rejectList <- ifelse(nrow(rejectList) > 0, rejectList$subject, -99)
+
+dst %>%
+  mutate(isBot = ifelse(subject %in% rejectList, 'Bot', 'Human')) %>% 
+  filter(cuedRt < 10000) %>% 
+  group_by(subject) %>% 
+  summarize(error = mean(error), rt = mean(cuedRt), isBot = unique(isBot)) %>% 
+  ggplot(aes(x = error, y = rt)) +
+  geom_point(aes(color = isBot)) +
+  scale_color_manual(name = 'Turing Test', values = c(Bot = 'red', Human = 'dark green')) +
+  xlab('Mean Error Rate') +
+  ylab('Mean Cued Response Time (ms)') + 
+  labs(caption = 'Red dashed lines represent the HIT rejection criteria') +
+  theme_bw() +
+  theme(legend.position = 'bottom') +
+  geom_vline(xintercept = 0.35, linetype = 'dashed', color = 'red') +
+  geom_hline(yintercept = 400, linetype = 'dashed', color = 'red')
+```
+
+
+Drop bad data
+```{r}
+print(paste('Number of rows before dropping bad subjects:', nrow(dst)))
+dst <- dst[!(dst$subject %in% badSubjects$subject),]
+print(paste('Number of rows after dropping bad subjects:', nrow(dst)))
+
+demo <- demo[!(demo$subject %in% badSubjects$subject),]
+rapidFire <- rapidFire[!(rapidFire$subject %in% badSubjects$subject),]
+```
+
+Zoom in on error rates for everyone else:
+
+```{r}
+dst %>% 
+  group_by(subject) %>% 
+  summarize(error = mean(error)) %>% 
+  ggplot(aes(x = error)) +
+  geom_histogram(color = 'black', fill = 'light grey') + 
+  theme_bw() +
+  xlab('Error Rate')
+```
+
+
+
+
+## Error and RT Trimming
+
+I'm handling all trimming of performance data first, followed by choice data.
+
+### Performance 
+
+First, dropping all trials with RT > 10 s
+
+**The choice-trimming procedures used for the DST phase will also be applied to the rapid choice phase. Summaries below reflect only trimming to DST phase.**
+
+```{r}
+## keep only cued < 10 s
+initialRows <- nrow(dst)
+
+print(paste('Number of rows before removing trials with RTs longer than 10 s:', initialRows))
+
+dst <- dst %>% 
+  filter(cuedRt < 10000)
+
+print(paste('Number of rows after removing trials with RTs longer than 10 s:', nrow(dst)))
+
+badTrials <- data.frame('Data Dropped' = round(1 - (nrow(dst) / initialRows), 4), Reason = 'Cued trials longer than 10 s')
+
+badTrials
+
+## subject-wise cued rt trimming
+initialRows <- nrow(dst)
+print(paste('Number of rows before removing trials where cued responses exceeded participant-wise cued RT cutoffs:', initialRows))
+
+dst0 <- dst %>% 
+  group_by(subject) %>% 
+  summarize(meancuedRt = mean(cuedRt), sdcuedRt = sd(cuedRt)) %>% 
+  inner_join(dst) %>% 
+  mutate(badcued = ifelse(cuedRt <= meancuedRt - 2 * sdcuedRt | cuedRt > meancuedRt + 2 * sdcuedRt, 1, 0)) %>% 
+  filter(badcued == 0) %>% 
+  select(-badcued)
+
+print(paste('Number of rows before removing trials where cued responses exceeded participant-wise cued RT cutoffs:', nrow(dst0)))
+
+badTrials <- rbind(badTrials, data.frame('Data Dropped' = round(1 - (nrow(dst0) / initialRows), 4), Reason = 'Cued trials with RTs more extreme than two SDs beyond participant-wise means'))
+badTrials
+
+```
+
+
+### Choice
+Saving out multiple datasets, one with each different trimming criterion (ie, nothing vs trim 10 s and subject-wise)
+
+```{r}
+## choice first
+## keep only < 10 s
+initialRows <- nrow(dst0)
+print(paste('Number of rows before removing trials where choices RTs exceeded 10 s', initialRows))
+dst1 <- dst0 %>% 
+  filter(choiceRt < 10000)
+print(paste('Number of rows after removing trials where choices RTs exceeded 10 s', nrow(dst1)))
+
+badTrials <- rbind(badTrials, data.frame('Data Dropped' = round(1 - (nrow(dst1) / initialRows), 4), Reason = 'Choice trials with with RTs  > 10 s'))
+
+print(paste('Number of rows before removing trials where choices exceeded participant-wise choice RT cutoffs:', initialRows))
+
+dst1 <- dst1 %>% 
+  group_by(subject) %>% 
+  summarize(meanChoiceRt = mean(choiceRt), sdChoiceRt = sd(choiceRt)) %>% 
+  inner_join(dst) %>% 
+  mutate(badChoice = ifelse(choiceRt <= meanChoiceRt - 2 * sdChoiceRt | choiceRt > meanChoiceRt + 2 * sdChoiceRt, 1, 0)) %>% 
+  filter(badChoice == 0) %>% 
+  select(-badChoice, meanChoiceRt, sdChoiceRt)
+
+rapidFire <- rapidFire %>% 
+  group_by(subject) %>% 
+  summarize(meanChoiceRt = mean(choiceRt), sdChoiceRt = sd(choiceRt)) %>% 
+  inner_join(rapidFire) %>% 
+  mutate(badChoice = ifelse(choiceRt <= meanChoiceRt - 2 * sdChoiceRt | choiceRt > meanChoiceRt + 2 * sdChoiceRt, 1, 0)) %>% 
+  filter(badChoice == 0) %>% 
+  select(-badChoice, meanChoiceRt, sdChoiceRt)
+
+print(paste('Number of rows after removing trials where choices exceeded participant-wise choice RT cutoffs:', nrow(dst1)))
+
+badTrials <- rbind(badTrials, data.frame('Data Dropped' = round(1 - (nrow(dst1) / initialRows), 2), Reason = 'Choice trials with RTs more extreme than two SDs beyond participant-wise means'))
+badTrials
+```
+
+
+
+
+
+Saving out a dataset for error analysis
+
+```{r}
+write.csv(dst, '../../data/dstCleanErrors.csv', row.names = FALSE)
+```
+
+Trimming out error trials and trials following error trials  
+*I didn't actually say I'd trim trials following error trials in the document, so I might want to think about that some*
+
+```{r}
+initialRows <- nrow(dst0)
+print(paste('Number of rows before removing error trials and trials following error trials :', initialRows))
+
+dst0 <- dst0 %>% 
+  mutate(errorTrim = ifelse(error | shift(error), 1, 0)) %>% 
+  filter(errorTrim == 0)
+
+dst1 <- dst1 %>% 
+  mutate(errorTrim = ifelse(error | shift(error), 1, 0)) %>% 
+  filter(errorTrim == 0)
+
+print(paste('Number of rows before removing error trials and trials following error trials :', nrow(dst0)))
+
+badTrials <- rbind(badTrials, data.frame('Data Dropped' = round(1 - (nrow(dst0) / initialRows), 2), Reason = 'Trimming error trials and trials following error trials'))
+badTrials
+```
+
+
+That should be good.
+
+```{r}
+write.csv(dst0, '../../data/dstClean.csv', row.names = FALSE)
+write.csv(demo, '../../data/demoClean.csv', row.names = FALSE)
+write.csv(rapidFire, '../../data/rapidFireClean.csv', row.names = FALSE)
+
+## save out condensed data with choices only
+
+dst0 <- dst0 %>% 
+  group_by(subject, choiceTrial) %>% 
+  summarize(choiceRt = mean(choiceRt), 
+            chosenDeckId = unique(chosenDeckId), 
+            difference = unique(difference), 
+            difficulty = unique(difficulty), 
+            selectedDeckLocation = unique(selectedDeckLocation),
+            leftDeckId = unique(leftDeckId),
+            rightDeckId = unique(rightDeckId),
+            riskyDeckSwitchTop = unique(riskyDeckSwitchTop),
+            riskyDeckSwitchBottom = unique(riskyDeckSwitchBottom),
+            safeDeckSwitch = unique(safeDeckSwitch),
+            outcomeSwitch = unique(outcomeSwitch),
+            condition = unique(condition),
+            selectedRiskyDeck = unique(selectedRiskyDeck)) %>% 
+  ungroup()
+
+dst1 <- dst1 %>% 
+  group_by(subject, choiceTrial) %>% 
+  summarize(choiceRt = mean(choiceRt), 
+            chosenDeckId = unique(chosenDeckId), 
+            difference = unique(difference), 
+            difficulty = unique(difficulty), 
+            selectedDeckLocation = unique(selectedDeckLocation),
+            leftDeckId = unique(leftDeckId),
+            rightDeckId = unique(rightDeckId),
+            riskyDeckSwitchTop = unique(riskyDeckSwitchTop),
+            riskyDeckSwitchBottom = unique(riskyDeckSwitchBottom),
+            safeDeckSwitch = unique(safeDeckSwitch),
+            outcomeSwitch = unique(outcomeSwitch),
+            condition = unique(condition),
+            selectedRiskyDeck = unique(selectedRiskyDeck)) %>% 
+  ungroup()
+
+write.csv(dst0, '../../data/dstCleanChoice.csv', row.names = FALSE)
+
+write.csv(dst1, '../../data/dstCleanChoice1.csv', row.names = FALSE)
+
+n <- dst %>% 
+  group_by(subject) %>% 
+  summarize(n()) %>% 
+  nrow()
+```
+
+**Final sample size is `r n`.**
+
+
+
