@@ -72,6 +72,7 @@ dst %>%
   summarize(selSafeDeck = mean(selSafeDeck)) %>% 
   group_by(difference, difficulty) %>% 
   summarize(ssd = mean(selSafeDeck), se = sd(selSafeDeck) / sqrt(n)) %>% 
+  print() %>% 
   ggplot(aes(x = difficulty, y = ssd, group = difference)) +
   geom_bar(stat = 'identity', aes(fill = difference), color = 'black', position = position_dodge(width = 0.9)) + 
   geom_errorbar(aes(ymin = ssd - se, ymax = ssd + se), position = position_dodge(width = 0.9), width = 0.5) +
@@ -292,6 +293,7 @@ dst %>%
   summarize(selSafeDeck = mean(selSafeDeck)) %>% 
   group_by(difference, difficulty) %>% 
   summarize(ssd = mean(selSafeDeck), se = sd(selSafeDeck) / sqrt(n)) %>% 
+  print() %>% 
   ggplot(aes(x = difficulty, y = ssd, group = difference)) +
   geom_bar(stat = 'identity', aes(fill = difference), color = 'black', position = position_dodge(width = 0.9)) + 
   geom_errorbar(aes(ymin = ssd - se, ymax = ssd + se), position = position_dodge(width = 0.9), width = 0.5) +
@@ -512,6 +514,7 @@ dst %>%
   summarize(selSafeDeck = mean(selSafeDeck)) %>% 
   group_by(difference, difficulty) %>% 
   summarize(ssd = mean(selSafeDeck), se = sd(selSafeDeck) / sqrt(n)) %>% 
+  print() %>% 
   ggplot(aes(x = difficulty, y = ssd, group = difference)) +
   geom_bar(stat = 'identity', aes(fill = difference), color = 'black', position = position_dodge(width = 0.9)) + 
   geom_errorbar(aes(ymin = ssd - se, ymax = ssd + se), position = position_dodge(width = 0.9), width = 0.5) +

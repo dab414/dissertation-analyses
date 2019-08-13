@@ -73,6 +73,10 @@ Coming soon.
 
 ## Experiment 3
 
+### Pilot
+*[Pilot](https://davebraun.org/dissertation/experiments/production/pilots/exp3Pilot/analysis/scripts/demo/){target=_blank}  
+  * A 25-participant pilot was conducted to assess the clarity of the instructions and manipulations.
+
 ### Preprocessing  
 * [Preprocessing](https://davebraun.org/dissertation/experiments/analysis/exp3/scripts/preprocessing/){target=_blank}  
   * The basic subject and RT-based trial trimming that was proposed in the document.  
