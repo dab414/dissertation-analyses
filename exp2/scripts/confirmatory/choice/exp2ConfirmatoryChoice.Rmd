@@ -208,6 +208,16 @@ dst %>%
   summarize(ssd = mean(selSafeDeck), se = sd(selSafeDeck)/ sqrt(n))
 ```
 
+**One sample contrasts of difficulty against 0.5**
+```{r}
+tData <- dst %>% 
+  group_by(subject, difficulty) %>% 
+  summarize(ssd = mean(selSafeDeck))
+
+t.test(tData[tData$difficulty == 'Harder than Reference',]$ssd, mu = .5)
+t.test(tData[tData$difficulty == 'Easier than Reference',]$ssd, mu = .5)
+```
+
 
 **Simple effect of difficulty across difference conditions**
 
@@ -431,6 +441,17 @@ dst %>%
 ```
 
 
+**One sample contrasts of difficulty against 0.5**
+```{r}
+tData <- dst %>% 
+  group_by(subject, difficulty) %>% 
+  summarize(ssd = mean(selSafeDeck))
+
+t.test(tData[tData$difficulty == 'Harder than Reference',]$ssd, mu = .5)
+t.test(tData[tData$difficulty == 'Easier than Reference',]$ssd, mu = .5)
+```
+
+
 **Simple effect of difficulty across difference conditions**
 
 Following up on the marginal interaction by comparing the two extreme conditions:
@@ -649,6 +670,17 @@ dst %>%
   summarize(selSafeDeck = mean(selSafeDeck)) %>% 
   group_by(difficulty) %>% 
   summarize(ssd = mean(selSafeDeck), se = sd(selSafeDeck)/ sqrt(n))
+```
+
+
+**One sample contrasts of difficulty against 0.5**
+```{r}
+tData <- dst %>% 
+  group_by(subject, difficulty) %>% 
+  summarize(ssd = mean(selSafeDeck))
+
+t.test(tData[tData$difficulty == 'Harder than Reference',]$ssd, mu = .5)
+t.test(tData[tData$difficulty == 'Easier than Reference',]$ssd, mu = .5)
 ```
 
 
