@@ -198,6 +198,14 @@ dst %>%
   group_by(difference) %>% 
   summarize(ssd = mean(selSafeDeck), se = sd(selSafeDeck)/ sqrt(n))
 ```
+**Means for difficulty effect**
+```{r}
+dst %>% 
+  group_by(difficulty, subject) %>% 
+  summarize(selSafeDeck = mean(selSafeDeck)) %>% 
+  group_by(difficulty) %>% 
+  summarize(ssd = mean(selSafeDeck), se = sd(selSafeDeck)/ sqrt(n))
+```
 
 
 **Simple effect of difficulty across difference conditions**
@@ -411,6 +419,14 @@ dst %>%
   summarize(ssd = mean(selSafeDeck), se = sd(selSafeDeck)/ sqrt(n))
 ```
 
+**Means for difficulty effect**
+```{r}
+dst %>% 
+  group_by(difficulty, subject) %>% 
+  summarize(selSafeDeck = mean(selSafeDeck)) %>% 
+  group_by(difficulty) %>% 
+  summarize(ssd = mean(selSafeDeck), se = sd(selSafeDeck)/ sqrt(n))
+```
 
 
 **Simple effect of difficulty across difference conditions**
@@ -623,6 +639,14 @@ dst %>%
   summarize(ssd = mean(selSafeDeck), se = sd(selSafeDeck)/ sqrt(n))
 ```
 
+**Means for difficulty effect**
+```{r}
+dst %>% 
+  group_by(difficulty, subject) %>% 
+  summarize(selSafeDeck = mean(selSafeDeck)) %>% 
+  group_by(difficulty) %>% 
+  summarize(ssd = mean(selSafeDeck), se = sd(selSafeDeck)/ sqrt(n))
+```
 
 
 **Simple effect of difficulty across difference conditions**
