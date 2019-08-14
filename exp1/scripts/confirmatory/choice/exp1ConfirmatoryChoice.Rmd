@@ -141,10 +141,12 @@ subjectCellMeans
 And finally the critical 2 X 2 plot:
 
 ```{r}
-subjectCellMeans %>% 
+cellMeans <- subjectCellMeans %>% 
   mutate(difference = factor(difference, levels = levels(factor(difference))[c(2,1)])) %>% 
   group_by(difficulty, difference) %>% 
-  summarize(mSelRefDeck = mean(selRefDeck), se = sd(selRefDeck) / sqrt(n())) %>% 
+  summarize(mSelRefDeck = mean(selRefDeck), se = sd(selRefDeck) / sqrt(n())) 
+cellMeans
+cellMeans %>% 
   ggplot(aes(x = difficulty, y = mSelRefDeck, group = difference)) +
   geom_bar(stat = 'identity', aes(fill = difference), color = 'black', position = position_dodge(width = 0.9)) +
   geom_errorbar(aes(ymin = mSelRefDeck - se, ymax = mSelRefDeck + se), position = position_dodge(width = 0.9), width = 0.5) +
@@ -170,6 +172,14 @@ SSd <- m1$ANOVA$SSd[4]
 DFd <- m1$ANOVA$DFd[4]
 MSe <- SSd / DFd
 
+```
+
+
+**Main effect of difficulty**
+```{r}
+subjectCellMeans %>% 
+  group_by(difficulty) %>% 
+  summarize(srd = mean(selRefDeck), se = sd(selRefDeck) / sqrt(n))
 ```
 
 
