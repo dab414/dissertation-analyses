@@ -1,5 +1,5 @@
 ---
-title: "Rapid Fire Choice Analyses"
+title: "`r paste('Experiment', ifelse(stringr::str_detect(getwd(), 'exp3'), 3, 2), 'Rapid Fire Phase Analyses')`"
 author: "Dave Braun"
 date: "7/21/2019"
 output: 
@@ -28,7 +28,7 @@ setwd('/home/dave/OneDrive/Research/By Project/Dissertation/experiments/analysis
 
 *This document was last updated at `r Sys.time()`.*
 
-This document is dedicated to exploring the Experiment 2 choice data from the rapid fire phase against that from the demand selection task phase. The general purpose is to assess whether or not this choice data is usable.  
+This document is dedicated to exploring the Experiment `r ifelse(stringr::str_detect(getwd(), 'exp3'), 3, 2)` choice data from the rapid fire phase against that from the demand selection task phase. The general purpose is to assess whether or not this choice data is usable.  
 
 Load and view the rapid fire data:
 
@@ -52,7 +52,9 @@ Let's compare the rt distributions for each subject:
 Randomly selecting 15 subjects to look at using this cool new plot I found:
 
 ```{r}
-ranSubjects <- sample(unique(dst$subject), 15)
+## temp
+ranSubjects <- dst$subject
+#ranSubjects <- sample(unique(dst$subject), 15)
 
 d <- dst %>% 
   select(subject, choiceRt) %>% 
@@ -304,8 +306,10 @@ plotData %>%
 ```{r}
 badDstSubjects
 badRfSubjects
-```
 
+u <- sum(!(badRfSubjects$subject %in% badDstSubjects$subject))
+```
+There are `r u` subjects who have bad rapid fire data who do *not* also have bad dst data.
 
 ```{r}
 rapidFire <- rapidFire[!(rapidFire$subject %in% badRfSubjects$subject), colnames(rapidFire)[colnames(rapidFire) %in% colnames(dst)]]

@@ -306,8 +306,10 @@ plotData %>%
 ```{r}
 badDstSubjects
 badRfSubjects
-```
 
+u <- sum(!(badRfSubjects$subject %in% badDstSubjects$subject))
+```
+There are `r u` subjects who have bad rapid fire data who do *not* also have bad dst data.
 
 ```{r}
 rapidFire <- rapidFire[!(rapidFire$subject %in% badRfSubjects$subject), colnames(rapidFire)[colnames(rapidFire) %in% colnames(dst)]]
