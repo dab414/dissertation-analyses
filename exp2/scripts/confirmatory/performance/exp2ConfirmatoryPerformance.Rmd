@@ -137,6 +137,7 @@ summary(m1)
 m2 <- lm(cuedRt ~ outcomeSwitch, data = d)
 slope <- round(m2$coefficients[2], 2)
 
+summary(m2)
 
 sMeans <- d %>% 
   group_by(subject, outcomeSwitch) %>% 
@@ -245,6 +246,8 @@ ggplot(newdata, aes(x = factor(outcomeSwitch), y = fit, group = transition)) +
 ```{r}
 m2 <- lm(error ~ outcomeSwitch, data = d)
 slope <- round(m2$coefficients[2], 5)
+
+summary(m2)
 
 sMeans <- d %>% 
   group_by(subject, outcomeSwitch) %>% 
