@@ -84,6 +84,7 @@ Coming soon.
 ### Confirmatory
 * [Confirmatory Choice Analyses](https://davebraun.org/dissertation/experiments/analysis/exp3/scripts/confirmatory/choice/){target=_blank}  
   * The core 2 (difficulty) X 2 (difference) ANOVA that was proposed in the document.  
+* [Confirmatory Performance Analyses](https://davebraun.org/dissertation/experiments/analysis/exp3/scripts/confirmatory/performance){target=_blank}
 
 ### Auxiliary  
 * [Practice Cued Task Switching Analysis](https://davebraun.org/dissertation/experiments/analysis/exp3/scripts/auxiliary/pracCued/){target=_blank}  
