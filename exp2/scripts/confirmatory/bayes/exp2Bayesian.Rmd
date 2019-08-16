@@ -1,0 +1,139 @@
+---
+title: "Experiment 2 Bayesian Analysis"
+author: "Dave Braun"
+date: "8/16/2019"
+output: 
+  html_document:
+    code_folding: hide
+    df_print: paged
+    includes:
+      after_body: ../../../../footer.html
+      in_header: ../../../../favicon.html
+knit:
+  (function(inputFile, encoding) {
+      rmarkdown::render(inputFile,
+                    encoding = encoding,
+                    output_file = 'index.html')})
+---
+```{r include = FALSE}
+library(tidyverse)
+library(BayesFactor)
+```
+
+
+*This document was last updated at `r Sys.time()`.*
+
+This document is dedicated to investigating the null choice effects in Experiment 2 with Bayesian statistics.
+
+
+```{r}
+d <- read.csv('../../../data/dstCleanChoice2.csv')
+head(d)
+```
+
+
+```{r}
+scm <- d %>% 
+  mutate(ssd = ifelse(selectedRiskyDeck == 1, 0, 1)) %>% 
+  group_by(subject, difference, difficulty) %>% 
+  summarize(ssd = mean(ssd))
+
+smm <- d %>% 
+  mutate(ssd = ifelse(selectedRiskyDeck == 1, 0, 1)) %>% 
+  group_by(subject, difficulty) %>% 
+  summarize(ssd = mean(ssd))
+```
+
+## Main effect of difficulty
+
+### Frequentist
+
+**Easier than reference**
+
+```{r}
+t.test(smm[smm$difficulty == 'Easier than Reference',]$ssd, mu = .5)
+```
+
+**Harder than reference**
+```{r}
+t.test(smm[smm$difficulty == 'Harder than Reference',]$ssd, mu = .5)
+```
+
+
+### Bayesian
+
+**Easier than reference**
+
+```{r}
+b1 <- ttestBF(smm[smm$difficulty == 'Easier than Reference',]$ssd, mu = .5)
+b1
+1 / (exp(b1@bayesFactor$bf))
+```
+
+**Harder than reference**
+
+```{r}
+b2 <- ttestBF(smm[smm$difficulty == 'Harder than Reference',]$ssd, mu = .5)
+b2
+1 / (exp(b2@bayesFactor$bf))
+```
+
+## Simple effect of difficulty
+
+### Frequentist 
+
+**Easier than reference**
+
+```{r}
+scm <- scm %>% 
+  filter(difference == 'Extreme')
+
+t.test(scm[scm$difficulty == 'Easier than Reference',]$ssd, mu = .5)
+```
+
+**Harder than refernece**
+
+```{r}
+t.test(scm[scm$difficulty == 'Harder than Reference',]$ssd, mu = .5)
+```
+
+
+### Bayesian
+
+**Easier than reference**
+
+```{r}
+b1 <- ttestBF(scm[scm$difficulty == 'Easier than Reference',]$ssd, mu = .5)
+b1
+1 / (exp(b1@bayesFactor$bf))
+```
+
+**Harder than reference**
+
+```{r}
+b2 <- ttestBF(scm[scm$difficulty == 'Harder than Reference',]$ssd, mu = .5)
+b2
+1 / (exp(b2@bayesFactor$bf))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
