@@ -7,7 +7,6 @@
 <meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
-<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
 <meta name="author" content="Dave Braun" />
@@ -1676,10 +1675,27 @@ summary {
 }
 </style>
 
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
 <!-- code folding -->
 <style type="text/css">
 .code-folding-btn { margin-bottom: 4px; }
 </style>
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
 
 
 
@@ -1823,7 +1839,12 @@ summary {
 </ul></li>
 <li>[Exploratory Choice Analysis]((<a href="https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/exploratory/choice/" class="uri">https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/exploratory/choice/</a>){target=_blank}
 <ul>
-<li>Trying to break down the subject data by trial in the experiment. It seems like selection strategies didn’t change much over time.</li>
+<li>Trying to break down the subject data by trial in the experiment. It seems like selection strategies didn’t change much over time.<br />
+</li>
+</ul></li>
+<li>[Exploratory Performance Analysis][<a href="https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/exploratory/performance/" class="uri">https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/exploratory/performance/</a>){target=_blank}
+<ul>
+<li>Analyzing to see whether performance depends on the difficulty variable. RTs for reference are faster for easier than reference conditions relative to harder conditions.</li>
 </ul></li>
 </ul>
 </div>
@@ -1882,7 +1903,12 @@ summary {
 <ul>
 <li><a href="https://davebraun.org/dissertation/experiments/analysis/exp3/scripts/exploratory/rapidFire/" target="_blank">Exploratory Rapid Fire Choice Analysis</a>
 <ul>
-<li>Exploring the choice data from the rapid fire phase, and making subject-wise exclusions based on choice data from both DST and rapid fire.</li>
+<li>Exploring the choice data from the rapid fire phase, and making subject-wise exclusions based on choice data from both DST and rapid fire.<br />
+</li>
+</ul></li>
+<li>[Exploratory Performance Analysis][<a href="https://davebraun.org/dissertation/experiments/analysis/exp3/scripts/exploratory/performance/" class="uri">https://davebraun.org/dissertation/experiments/analysis/exp3/scripts/exploratory/performance/</a>){target=_blank}
+<ul>
+<li>Analyzing to see whether performance depends on the difficulty variable.</li>
 </ul></li>
 </ul>
 </div>
@@ -1933,28 +1959,6 @@ $(document).ready(function () {
 
 
 </script>
-
-<!-- tabsets -->
-
-<script>
-$(document).ready(function () {
-  window.buildTabsets("TOC");
-});
-
-$(document).ready(function () {
-  $('.tabset-dropdown > .nav-tabs > li').click(function () {
-    $(this).parent().toggleClass('nav-tabs-open')
-  });
-});
-</script>
-
-<!-- code folding -->
-<script>
-$(document).ready(function () {
-  window.initializeCodeFolding("hide" === "show");
-});
-</script>
-
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>
