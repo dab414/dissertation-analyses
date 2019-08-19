@@ -67,7 +67,9 @@ Coming soon.
 * [Exploratory Rapid Fire Choice Analysis](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/exploratory/rapidFire/){target=_blank}  
   * Exploring the choice data from the rapid fire phase, and making subject-wise exclusions based on choice data from both DST and rapid fire.
 * [Exploratory Random Effects Analysis](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/exploratory/randomEffects/){target=_blank}
-  * Fitting generalized linear mixed models to the choice data in an effort to control for between-subject variance in the predicted effects.
+  * Fitting generalized linear mixed models to the choice data in an effort to control for between-subject variance in the predicted effects.  
+* [Exploratory Choice Analysis]((https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/exploratory/choice/){target=_blank}  
+  * Trying to break down the subject data by trial in the experiment. It seems like selection strategies didn't change much over time.
 
 ### Demographics Summary
 * [Demographics Summary](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/demo/){target=_blank}  
