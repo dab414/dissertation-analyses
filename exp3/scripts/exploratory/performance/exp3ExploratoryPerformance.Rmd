@@ -1,0 +1,71 @@
+---
+title: "`r paste('Experiment', ifelse(stringr::str_detect(getwd(), 'exp3'), 3, 2), 'Exploratory Performance Analyses')`"
+author: "Dave Braun"
+date: "7/21/2019"
+output: 
+  html_document:
+    code_folding: hide
+    df_print: paged
+    includes:
+      after_body: ../../../../footer.html
+      in_header: ../../../../favicon.html
+knit:
+  (function(inputFile, encoding) {
+      rmarkdown::render(inputFile,
+                    encoding = encoding,
+                    output_file = 'index.html')})
+---
+```{r include = FALSE}
+library(tidyverse)
+```
+
+*This document was last updated at `r Sys.time()`.*
+
+This document is dedicated to investigating a post-hoc hypothesis for the Experiment `r ifelse(stringr::str_detect(getwd(), 'exp3'), 3, 2)` performance data. It is possible that performance on the reference deck would depend on the context in which it was chosen. For harder than reference conditions, the reference is the best possible outcome; for easier than reference, it is the worst. My guess would be that, if people adjust their task preparedness according to the context, then they might perform worse when doing a reference run during the easier than reference relative to the harder than reference conditions.
+
+```{r}
+d <- read.csv('../../../data/dstClean.csv')
+N <- d %>% 
+  group_by(subject) %>% 
+  summarize(n()) %>% 
+  nrow()
+head(d)
+```
+
+
+```{r}
+scm <- d %>% 
+  group_by(subject, difficulty) %>% 
+  summarize(cuedRt = mean(cuedRt))
+
+t1 <- t.test(scm[scm$difficulty=='Easier than Reference',]$cuedRt, scm[scm$difficulty=='Harder than Reference',]$cuedRt, paired = TRUE)
+
+scm %>% 
+  group_by(difficulty) %>% 
+  summarize(rt = mean(cuedRt), se = sd(cuedRt) / sqrt(N)) %>% 
+  print() %>% 
+  ggplot(aes(x = difficulty, y = rt)) +
+  geom_bar(stat = 'identity') + 
+  geom_text(aes(x = 1, y = 1300), label = paste('t(', t1$parameter, ') = ', abs(round(t1$statistic, 2)), ', p ', ifelse(t1$p.value < .001, '< .001', round(t1$p.value, 3)), sep = '')) +
+  geom_errorbar(aes(ymin = rt - se, ymax = rt + se), width = 0.5) +
+  ylim(0, 1500) +
+  labs(
+    x = 'Difficulty',
+    y = 'Response Time (ms)'
+  ) +
+  theme_bw()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
