@@ -1,3 +1,8 @@
+8/26/2019
+	some evidence for a difficulty X experiment X age interaction in the data
+		dunno how meaningful it is / how much i wanna follow up on it
+		haven't looked to see the direction of the interaction
+
 8/8/2019
 	i should probably do some type of exploratory analysis of order effects in exps 2 / 3, cuz im sure jessecae will ask about it
 
