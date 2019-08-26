@@ -1729,7 +1729,7 @@ $(document).ready(function () {
 </div>
 
 
-<p><em>This document was last updated at 2019-08-14 09:32:19.</em></p>
+<p><em>This document was last updated at 2019-08-26 13:36:33.</em></p>
 <p>This document is dedicated to analyzing the data from the practice cued task switching portion of Experiment 3. Subjects performed 9, 17-trial cycles of cued tasks switching, for a total of 153 trials. I’m going to trim these data the same way that the perforamnce data for DST data was trimmed, and then perform two paired t-tests were transition predicts (1) RT and (2) error rate.</p>
 <pre class="r"><code>d &lt;- read.csv('../../../data/pracCued.csv')
 badSubjects &lt;- read.csv('../../../data/badSubjects.csv')
@@ -1818,7 +1818,9 @@ print(paste('Number of rows before trimming error trials and trials following er
 <pre><code>## [1] &quot;Number of rows before trimming error trials and trials following error trials: 18947&quot;</code></pre>
 <pre class="r"><code>print(paste('Number of rows after trimming error trials and trials following error trials:', nrow(d)))</code></pre>
 <pre><code>## [1] &quot;Number of rows after trimming error trials and trials following error trials: 17265&quot;</code></pre>
-<pre class="r"><code>trimmingSummary &lt;- rbind(trimmingSummary, data.frame(Data.Dropped = round(1 - (nrow(d) / initialRows), 2), Reason = 'Error trials and trials following error trials'))
+<pre class="r"><code>write.csv(d, '../../../data/pracCuedClean.csv', row.names = FALSE)
+
+trimmingSummary &lt;- rbind(trimmingSummary, data.frame(Data.Dropped = round(1 - (nrow(d) / initialRows), 2), Reason = 'Error trials and trials following error trials'))
 trimmingSummary</code></pre>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">

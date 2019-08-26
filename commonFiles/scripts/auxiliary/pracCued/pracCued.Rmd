@@ -104,6 +104,8 @@ d <- d %>%
 print(paste('Number of rows before trimming error trials and trials following error trials:', initialRows))
 print(paste('Number of rows after trimming error trials and trials following error trials:', nrow(d)))
 
+write.csv(d, '../../../data/pracCuedClean.csv', row.names = FALSE)
+
 trimmingSummary <- rbind(trimmingSummary, data.frame(Data.Dropped = round(1 - (nrow(d) / initialRows), 2), Reason = 'Error trials and trials following error trials'))
 trimmingSummary
 ```
