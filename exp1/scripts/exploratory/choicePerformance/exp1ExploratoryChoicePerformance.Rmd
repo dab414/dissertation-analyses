@@ -1,0 +1,83 @@
+---
+title: "Experiment 1 Choice RT Analysis"
+author: "Dave Braun"
+date: "7/21/2019"
+output: 
+  html_document:
+    code_folding: hide
+    df_print: paged
+    includes:
+      after_body: ../../../../footer.html
+      in_header: ../../../../favicon.html
+knit:
+  (function(inputFile, encoding) {
+      rmarkdown::render(inputFile,
+                    encoding = encoding,
+                    output_file = 'index.html')})
+---
+```{r include = FALSE}
+library(tidyverse)
+library(ez)
+```
+
+*This document was last updated at `r Sys.time()`.*
+
+This document is dedicated to exploring the choice RT data for Experiment 1. I had no a priori predictions about these data---but they might give some insight into the choice patterns. Performance RT and choice data suggested people were more sensitive to differences between easier decks but not harder decks. One prediction is that people might have been faster to make choices during easier than reference rather than harder than reference blocks.
+
+```{r}
+d <- read.csv('../../../data/dstClean.csv')
+N <- d %>% 
+  group_by(subject) %>% 
+  summarize(n()) %>% 
+  nrow()
+head(d)
+d$difference <- factor(d$difference, levels = levels(d$difference)[c(2,1)])
+```
+
+
+
+## Choice RTs for the difficulty X difference design
+
+```{r}
+pd <- position_dodge(width = .9)
+d %>% 
+  group_by(subject, difference, difficulty) %>% 
+  summarize(choiceRt = mean(choiceRt)) %>% 
+  group_by(difference, difficulty) %>% 
+  summarize(rt = mean(choiceRt), se = sd(choiceRt) / sqrt(N)) %>% 
+  ggplot(aes(x = difficulty, y = rt, group = difference)) +
+  geom_bar(stat = 'identity', aes(fill = difference), position = pd) +
+  geom_errorbar(aes(ymin = rt - se, ymax = rt + se), position = pd, width = .5) +
+  ylim(0, 500) + 
+  scale_fill_manual(name = 'Difference', values = c(Moderate = 'light grey', Extreme = 'black')) +
+  labs(
+    x = 'Difficulty',
+    y = 'Mean Choice Response Time (ms)'
+  ) +
+  theme_bw()
+```
+
+
+
+## Statistics
+
+```{r}
+m1 <- ezANOVA(wid = subject, within = .(difference, difficulty), dv = choiceRt, data = d, detailed = TRUE)
+m1 <- cbind(m1$ANOVA, data.frame(n2p = m1$ANOVA$SSn / (m1$ANOVA$SSn + m1$ANOVA$SSd)))
+m1
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -41,7 +41,8 @@ My aspirations for this document are to make a multi-layered experience, where y
   * A breakdown of deck selection over trials in a block. Looking for some basic evidence in favor of the idea that people might be faster to learn effort intensities that are harder (rather than easier) than the reference intensity.  
 
 ### Exploratory Analyses
-Coming soon.
+* [Exploratory Choice RT Analysis](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/exploratory/choicePerformance/){target=_blank}  
+  * Breaking down choice RTs by the 2 X 2 design.  
 
 ### Demographics Summary
 * [Demographics Summary](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/demo/){target=_blank}  
@@ -72,6 +73,8 @@ Coming soon.
   * Trying to break down the subject data by trial in the experiment. It seems like selection strategies didn't change much over time.  
 * [Exploratory Performance Analysis](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/exploratory/performance/){target=_blank}  
   * Analyzing to see whether performance depends on the difficulty variable. RTs for reference are faster for easier than reference conditions relative to harder conditions.  
+* [Exploratory Choice RT Analysis](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/exploratory/choicePerformance/){target=_blank}  
+  * Breaking down choice RTs by the 2 X 2 design.  
 
 ### Demographics Summary
 * [Demographics Summary](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/demo/){target=_blank}  
@@ -101,6 +104,8 @@ Coming soon.
   * Exploring the choice data from the rapid fire phase, and making subject-wise exclusions based on choice data from both DST and rapid fire.  
 * [Exploratory Performance Analysis](https://davebraun.org/dissertation/experiments/analysis/exp3/scripts/exploratory/performance/){target=_blank}  
   * Analyzing to see whether performance depends on the difficulty variable. RTs for reference are faster for easier than reference conditions relative to harder conditions.  
+* [Exploratory Choice RT Analysis](https://davebraun.org/dissertation/experiments/analysis/exp3/scripts/exploratory/choicePerformance/){target=_blank}  
+  * Breaking down choice RTs by the 2 X 2 design.
 
 ### Demographics Summary
 * [Demographics Summary](https://davebraun.org/dissertation/experiments/analysis/exp3/scripts/demo/){target=_blank}  

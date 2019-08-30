@@ -1,4 +1,7 @@
 formatSimpleEffects <- function(model, omnibusParams) {
+  ## omnibus params needs to be named vector with:
+  ## MSe, DFd, and SSd
+
   critRow <- nrow(model$ANOVA)
   SSn <- model$ANOVA$SSn[critRow]
   DFn <- model$ANOVA$DFn[critRow]

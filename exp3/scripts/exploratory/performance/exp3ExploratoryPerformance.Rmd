@@ -17,6 +17,7 @@ knit:
 ---
 ```{r include = FALSE}
 library(tidyverse)
+library(ez)
 ```
 
 *This document was last updated at `r Sys.time()`.*
@@ -24,6 +25,7 @@ library(tidyverse)
 This document is dedicated to investigating a post-hoc hypothesis for the Experiment `r ifelse(stringr::str_detect(getwd(), 'exp3'), 3, 2)` performance data. It is possible that performance on the reference deck would depend on the context in which it was chosen. For harder than reference conditions, the reference is the best possible outcome; for easier than reference, it is the worst. My guess would be that, if people adjust their task preparedness according to the context, then they might perform worse when doing a reference run during the easier than reference relative to the harder than reference conditions.
 
 ```{r}
+source('../../formatSimpleEffects.r')
 d <- read.csv('../../../data/dstClean.csv')
 N <- d %>% 
   group_by(subject) %>% 
@@ -55,6 +57,70 @@ scm %>%
   ) +
   theme_bw()
 ```
+
+
+
+### Breaking the above down by transition
+
+```{r}
+pd <- position_dodge(width = .9)
+d %>% 
+  filter(transition != 'startBlock') %>% 
+  group_by(subject, transition, difficulty) %>% 
+  summarize(cuedRt = mean(cuedRt)) %>% 
+  group_by(transition, difficulty) %>% 
+  summarize(rt = mean(cuedRt), se = sd(cuedRt) / sqrt(N)) %>% 
+  print() %>% 
+  ggplot(aes(x = difficulty, y = rt, group = transition)) +
+  geom_bar(stat = 'identity', aes(fill = transition), position = pd) +
+  geom_errorbar(aes(ymin = rt - se, ymax = rt + se), width = .5, position = pd) +
+  ylim(0,2000) +
+  scale_fill_manual(name = 'Transition', values = c(`repeat` = 'light grey', `switch` = 'black'), labels = c(`repeat` = 'Repeat', `switch` = 'Switch')) +
+  labs(
+    x = 'Difficulty',
+    y = 'Mean Response Time (ms)'
+  ) +
+  theme_bw()
+```
+
+
+```{r}
+m1 <- ezANOVA(wid = subject, within = .(difficulty, transition), dv = cuedRt, data = d[d$transition !='startBlock',], detailed = TRUE)
+m1a <- data.frame(m1$ANOVA)
+m1a$n2p <- m1a$SSn / (m1a$SSn + m1a$SSd)
+MSe <- m1a$SSd[4] / m1a$DFd[4]
+m1a
+```
+
+
+
+### Transition means
+```{r}
+d %>% 
+  filter(transition != 'startBlock') %>% 
+  group_by(transition, subject) %>% 
+  summarize(cuedRt = mean(cuedRt)) %>% 
+  group_by(transition) %>% 
+  summarize(rt = mean(cuedRt), se = sd(cuedRt) / sqrt(N))
+```
+
+
+### Following up on interaction
+
+
+**Simple effect of difficulty for repeats**
+```{r}
+m2 <- ezANOVA(wid = subject, within = .(difficulty), dv = cuedRt, data = d[d$transition == 'repeat',], detailed = TRUE)
+omnibusParams <- c(SSd = m1a$SSd[4], MSe = MSe, DFd = m1a$DFd[4])
+rep <- formatSimpleEffects(model = m2, omnibusParams = omnibusParams)
+
+m2 <- ezANOVA(wid = subject, within = .(difficulty), dv = cuedRt, data = d[d$transition == 'switch',], detailed = TRUE)
+sw <- formatSimpleEffects(model = m2, omnibusParams = omnibusParams)
+
+data.frame(effect = c('for repetitions', 'for switches'), result = c(rep, sw))
+```
+
+
 
 
 
