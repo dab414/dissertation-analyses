@@ -1,7 +1,7 @@
 ---
-title: "Experiment 2 Random Effects"
+title: "Experiment 3 Random Effects"
 author: "Dave Braun"
-date: "7/21/2019"
+date: "8/30/2019"
 output: 
   html_document:
     code_folding: hide
@@ -28,7 +28,9 @@ library(gridExtra)
 
 *This document was last updated at `r Sys.time()`.*
 
-This document is dedicated to exploring analyses of choice data from Experiment 2 that control for random effects. Much of my approach here is informed by [Ben Bolker's incredible resources](https://bbolker.github.io/mixedmodels-misc/) on generalized linear mixed models (GLMMs).
+This document is dedicated to exploring analyses of choice data from Experiment 3 that control for random effects. Much of my approach here is informed by [Ben Bolker's incredible resources](https://bbolker.github.io/mixedmodels-misc/) on generalized linear mixed models (GLMMs).
+
+*Much of the narrative here is copy/pasted from Exp 2, I'm going through and adjusting the analyses for these Exp 3 data manually, however.*
 
 # The Case for Random Effects
 As I believe the brilliant [Lucy Napper](https://psychology.cas2.lehigh.edu/content/lucy-napper) once explained to me in PSYC Stats 422 a long time ago, a random effect is generally any variable in the experimental design whose levels are a sampling of all possible levels in the population or world. One can then group the fixed effects by the random factors to assess how the fixed factors vary across levels of the random factors. It's also a part of the design you're not explicitly looking to study. [Bolker](https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html) warns us, however, that determining whether a factor should be treated as fixed or random is often more difficult that it seems.  
@@ -53,7 +55,7 @@ $$
 
 Where $\gamma_{00}$ and $\gamma_{01}$ are the true intercepts and slopes, respectively, and where the $u$ terms are normally distributed with a mean of zero and a variance determined by the variance-covariance matrix of the random effects. So the fixed effects are modified by these random variance terms, and that modification is constant within subjects.
 
-## Data exploration: Random effects in Experiment 2 choice data
+## Data exploration: Random effects in Experiment 3 choice data
 
 The need for a mixed model jumped out to me when visualizing the between-subject variability in the predicted choice effects, particularly the main effect of difficulty on risk preferences:  
 
@@ -93,7 +95,7 @@ sMeans %>%
   
 ```
 
-At the very least, we can see from this plot that the intercepts are highly variable. It's tough from this plot to get a sense of to what extent the interaction varies across subjects. But we can look at the intercept in its own right:
+
 
 ```{r}
 d %>% 
@@ -226,6 +228,8 @@ anova(m1_noCov, m1_noDiff)
 
 The random slope of difference is indeed a significant parameter in the model, so we can conclude that the model with the intercept and both slope variances (with no covariances) is the optimal model.  
 
+*The same model is the best fitting one across both experiments.*
+
 Now assessing how much gain in precision there is from using Gauss-Hermite quadrature estimation instead of LaPlace. I'll assess this by looking at how estimation of the effects changes as a function of increasing quadrature points.  
 
 Alright, nevermind. It seems that lme4 doesn't support using Gauss-Hermite estimation with more than one scalar random effect term... it appears to be a [known limitation](https://github.com/lme4/lme4/issues/123)---it's an old thread but I can't find much recent discussion on the topic.  
@@ -346,7 +350,9 @@ p3 <- rans %>%
 grid.arrange(p1, p2, p3, nrow = 1)
 ```
 
-Watch out, X-axes are on different scales. At first it would appear that there's the most variability in the difference, but after looking at the scales, difference actually has the least amount of variability. Also remember everything is on the log odds scale, which can make interpretation difficult.
+Pretty wide variability in the difficulty slope; not much at all on the difference slope.  
+
+*Just a note, these are the conditional modes. Ie, how much each subject deviates from the population-level estimate.*
 
 
 ## Inference
@@ -406,7 +412,7 @@ CIs %>%
   ) +
   scale_color_discrete(name = 'Method') +
   theme_bw() +
-  theme(legend.position = c(.9, .5))
+  theme(legend.position = c(.9, .3))
   
 ```
 
@@ -494,8 +500,6 @@ paste('Difficulty:', mean(PBrefdist >= obs))
 ```
 
 $X(1)^2 = `r round(obs,2)`, p = `r round(pval, 3)`$
-
-I think that's about as accurate as it gets. The effect of difficulty is not significant `r emo::ji('loudly crying face')`.
 
 
 
