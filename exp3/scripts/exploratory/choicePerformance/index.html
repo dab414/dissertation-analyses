@@ -1729,7 +1729,7 @@ $(document).ready(function () {
 </div>
 
 
-<p><em>This document was last updated at 2019-08-30 16:17:39.</em></p>
+<p><em>This document was last updated at 2019-08-31 14:16:16.</em></p>
 <p>This document is dedicated to investigating a post-hoc hypothesis for the Experiment 3 choice RT data. I didn’t make any a priori predictions as to what these data would look like, but the idea is that I’ll break down choice RTs by the main design and see what we get. I’m using the rapid fire trimming procedure data for everything. This includes the basic 10 s trim on chocie RTs, which I think is good enough for these purposes. In a sense what I’m doing here is just analyzing the exact trials that went in to the choice analysis. The point of these data is really just to get insight into choice, I don’t really care about choice RTs per se.</p>
 <pre class="r"><code>d &lt;- read.csv('../../../data/dstCleanChoice2.csv')
 N &lt;- d %&gt;% 
@@ -1743,6 +1743,7 @@ head(d)</code></pre>
   </script>
 </div>
 <pre class="r"><code>d$difference &lt;- factor(d$difference, levels = levels(d$difference)[c(2,1)])</code></pre>
+<p><strong>The sample size is 119.</strong></p>
 <pre class="r"><code>cellMeans &lt;- d %&gt;% 
   group_by(subject, difference, difficulty) %&gt;% 
   summarize(choiceRt = mean(choiceRt)) %&gt;% 
@@ -1775,18 +1776,15 @@ cellMeans %&gt;%
 <pre><code>## Warning: Collapsing data to cell means. *IF* the requested effects are a
 ## subset of the full design, you must use the &quot;within_full&quot; argument, else
 ## results may be inaccurate.</code></pre>
-<pre class="r"><code>m1</code></pre>
-<pre><code>## $ANOVA
-##                  Effect DFn DFd          SSn       SSd            F
-## 1           (Intercept)   1 118 1.193323e+09 119949295 1173.9300016
-## 2            difference   1 118 1.006804e+04   3682296    0.3226327
-## 3            difficulty   1 118 1.671960e+05   6016747    3.2790364
-## 4 difference:difficulty   1 118 2.890046e+04   3087730    1.1044536
-##              p p&lt;.05          ges
-## 1 3.659761e-63     * 8.999018e-01
-## 2 5.711090e-01       7.584434e-05
-## 3 7.271434e-02       1.258028e-03
-## 4 2.954383e-01       2.176814e-04</code></pre>
+<pre class="r"><code>m1 &lt;- m1$ANOVA
+m1$p &lt;- round(m1$p, 3)
+m1$n2p &lt;- m1$SSn / (m1$SSn + m1$SSd)
+m1</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Effect"],"name":[1],"type":["chr"],"align":["left"]},{"label":["DFn"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["DFd"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["SSn"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["SSd"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["F"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["p"],"name":[7],"type":["dbl"],"align":["right"]},{"label":["p<.05"],"name":[8],"type":["chr"],"align":["left"]},{"label":["ges"],"name":[9],"type":["dbl"],"align":["right"]},{"label":["n2p"],"name":[10],"type":["dbl"],"align":["right"]}],"data":[{"1":"(Intercept)","2":"1","3":"118","4":"1.193323e+09","5":"119949295","6":"1173.9300016","7":"0.000","8":"*","9":"8.999018e-01","10":"0.908663782","_rn_":"1"},{"1":"difference","2":"1","3":"118","4":"1.006804e+04","5":"3682296","6":"0.3226327","7":"0.571","8":"","9":"7.584434e-05","10":"0.002726720","_rn_":"2"},{"1":"difficulty","2":"1","3":"118","4":"1.671960e+05","5":"6016747","6":"3.2790364","7":"0.073","8":"","9":"1.258028e-03","10":"0.027037124","_rn_":"3"},{"1":"difference:difficulty","2":"1","3":"118","4":"2.890046e+04","5":"3087730","6":"1.1044536","7":"0.295","8":"","9":"2.176814e-04","10":"0.009272983","_rn_":"4"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
 <div id="main-effect-of-difficulty" class="section level3">
 <h3>Main effect of difficulty</h3>
 <pre class="r"><code>d %&gt;% 
