@@ -34,6 +34,7 @@ head(d)
 ```
 **The sample size is `r N`.**
 
+# Response Times
 
 ## Observed means
 
@@ -51,6 +52,7 @@ cm <- d %>%
   group_by(chosenDeckIdEI) %>% 
   summarize(rt = mean(mrt), se = sd(mrt) / sqrt(N)) 
   
+cm
 
 d %>% 
   group_by(subject, chosenDeckIdEI) %>% 
@@ -175,6 +177,100 @@ d$chosenDeckIdEI_c = d$chosenDeckIdEI - 0.9
 m1 <- lm(cuedRt ~ chosenDeckIdEI_c * transition, data = d)
 summary(m1)
 ```
+
+
+# Error Rates
+
+
+## Observed means
+
+```{r}
+d <- read.csv('../../../data/dstCleanErrors.csv')
+condCodes <- data.frame(chosenDeckId = unique(d$chosenDeckId), chosenDeckIdEI = c(.1,.5,.3,.9,.7))
+d <- d %>% 
+  inner_join(condCodes, by = 'chosenDeckId') %>% 
+  mutate(chosenDeckIdEI = factor(chosenDeckIdEI))
+```
+
+```{r}
+cm <- d %>% 
+  group_by(subject, chosenDeckIdEI) %>% 
+  summarize(err = mean(error)) %>% 
+  group_by(chosenDeckIdEI) %>% 
+  summarize(error = mean(err), se = sd(err) / sqrt(N)) 
+  
+
+d %>% 
+  group_by(subject, chosenDeckIdEI) %>% 
+  summarize(error = mean(error)) %>% 
+  ggplot(aes(x = chosenDeckIdEI, y = error)) +
+  geom_jitter(height = 0, alpha = .3, width = 0.2) + 
+  geom_line(data = cm, aes(x = chosenDeckIdEI, y = error, group = 1)) +
+  geom_point(data = cm, aes(x = chosenDeckIdEI, y = error), size = 2) +
+  geom_errorbar(data = cm, aes(ymin = error - se, ymax = error + se), width = .5) + 
+  ylim(0,.5)+
+  labs(
+    x = 'Chosen Deck Probability of Switching',
+    y = 'Error Rate'
+  ) + 
+  theme_bw()
+
+```
+
+
+
+Adding in transition
+
+
+
+```{r}
+d <- d[d$transition != 'startBlock',]
+cm <- d %>% 
+  group_by(subject, chosenDeckIdEI, transition) %>% 
+  summarize(err = mean(error)) %>% 
+  group_by(chosenDeckIdEI, transition) %>% 
+  summarize(error = mean(err), se = sd(err) / sqrt(N)) 
+  
+
+d %>% 
+  group_by(subject, chosenDeckIdEI, transition) %>% 
+  summarize(error = mean(error)) %>% 
+  ggplot(aes(x = chosenDeckIdEI, y = error, group = transition)) +
+  geom_jitter(aes(color = transition), height = 0, alpha = .3, width = 0.2) + 
+  geom_line(data = cm, aes(x = chosenDeckIdEI, y = error, color = transition), size = 2) +
+  geom_point(data = cm, aes(x = chosenDeckIdEI, y = error, color = transition), size = 2) +
+  geom_errorbar(data = cm, aes(ymin = error - se, ymax = error + se), width = .5) + 
+  ylim(0,.5)+
+  scale_color_manual(name = 'Transition', labels = c(`repeat` = 'Repeat', `switch` = 'Switch'), values = c(`repeat` = 'blue', `switch` = 'red')) +
+  labs(
+    x = 'Chosen Deck Probability of Switching',
+    y = 'Error Rate'
+  ) + 
+  theme_bw() +
+  theme(legend.position = c(.1, .8))
+
+```
+
+
+
+## Build a model
+
+```{r}
+d$CDI_c <- as.numeric(as.character(d$chosenDeckIdEI)) - 0.5
+m1 <- lm(error ~ CDI_c, data = d)
+summary(m1)
+
+d$transitionE <- ifelse(d$transition == 'repeat', -0.5, 0.5)
+
+m2 <- lm(error ~ CDI_c * transitionE, data = d)
+summary(m2)
+```
+
+
+
+
+
+
 
 
 
