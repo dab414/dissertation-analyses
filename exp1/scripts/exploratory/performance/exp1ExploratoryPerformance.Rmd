@@ -132,13 +132,14 @@ Power model AIC: **`r format(AIC(m2), scientific = FALSE)`**
 ```{r}
 d <- d[d$transition != 'startBlock',]
 d$chosenDeckIdEI = d$chosenDeckIdEI - 0.5
+d$transitionE <- ifelse(d$transition == 'repeat', -0.5, 0.5)
 m1 <- lm(cuedRt ~ chosenDeckIdEI * transition, data = d)
 summary(m1)
 
-newdata <- expand.grid(chosenDeckIdEI = seq(.1, .9, .001), transition = c(0, 1))
+newdata <- expand.grid(chosenDeckIdEI = seq(.1, .9, .001), transition = c(-0.5, 0.5))
 newdata$chosenDeckIdEI <- newdata$chosenDeckIdEI - 0.5
 newdata$proba <- m1$coefficients[1] + m1$coefficients[2] * newdata$chosenDeckIdEI + m1$coefficients[3] * newdata$transition + m1$coefficients[4] * newdata$transition * newdata$chosenDeckIdEI
-newdata$transition <- ifelse(newdata$transition == 0, 'repeat', 'switch')
+newdata$transition <- ifelse(newdata$transition == -0.5, 'repeat', 'switch')
 newdata$chosenDeckIdEI <- newdata$chosenDeckIdEI + 0.5
 d$chosenDeckIdEI <- d$chosenDeckIdEI + 0.5
 
