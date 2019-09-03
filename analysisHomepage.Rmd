@@ -43,6 +43,8 @@ My aspirations for this document are to make a multi-layered experience, where y
 ### Exploratory Analyses
 * [Exploratory Choice RT Analysis](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/exploratory/choicePerformance/){target=_blank}  
   * Breaking down choice RTs by the 2 X 2 design.  
+* [Exploratory Performance Analysis](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/exploratory/performance/){target=_blank}    
+  * Analyzing performance data with linear vs. non-linear regressions.
 
 ### Demographics Summary
 * [Demographics Summary](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/demo/){target=_blank}  
