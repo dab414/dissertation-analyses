@@ -106,4 +106,74 @@ colnames(omni) <- cs
 omni
 ```
 
-**Planned Comparisons**
+## Updated analysis (4-16)
+
+I want to do a basic check as to whether or not the pattern of effects looks different when a condition is the first one a subject encountered vs. when it isn't
+
+
+```{r}
+d <- read.csv('../../../data/dstClean.csv')
+
+d$isFirstBlock <- ifelse(d$cycle == 1 & d$block == 1, 'First Block', 'Not First Block')
+
+d %>% 
+  group_by(subject, isFirstBlock, condition) %>% 
+  summarize(srd1 = mean(srd), nobs = n()) %>% 
+  group_by(isFirstBlock, condition) %>% 
+  summarize(srd = mean(srd1), se = sd(srd1) / sqrt(n), nobs = sum(nobs)) %>% 
+  #filter(isFirstBlock == 'First Block')
+  ggplot(aes(x = condition, y = srd)) + 
+  geom_hline(yintercept = .5, linetype = 'dotted') +
+  geom_line() + 
+  geom_errorbar(aes(ymin = srd - se, ymax = srd + se)) +
+  geom_point(size = 2) +
+  geom_label(aes(label = nobs), nudge_y = -.10) +
+  facet_wrap(~isFirstBlock) + 
+  scale_x_continuous(labels = c(.1, .3, .7, .9), breaks = c(.1, .3, .7, .9)) +
+  ylim(0,1) +
+  labs(
+    y = 'Proportion Selection of Reference Deck',
+    x = 'Probability of Switching for Critical Deck',
+    caption = 'Labels reflect number of observations per condition'
+  ) + 
+  theme_bw() + 
+  theme(axis.ticks = element_blank(),
+        panel.grid = element_blank(),
+        strip.background = element_rect(color = 'black', fill = 'white'))
+  
+  
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

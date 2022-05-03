@@ -1,0 +1,506 @@
+---
+title: "Experiment 1 Exploratory Spline Model Final Fifty"
+author: "Dave Braun"
+date: "7/21/2019"
+output: 
+  html_document:
+    code_folding: hide
+    df_print: paged
+    includes:
+      after_body: ../../../../../footer.html
+      in_header: ../../../../../favicon.html
+knit:
+  (function(inputFile, encoding) {
+      rmarkdown::render(inputFile,
+                    encoding = encoding,
+                    output_file = 'index.html')})
+---
+```{r include = FALSE}
+library(tidyverse)
+library(ez)
+library(data.table)
+library(lme4)
+library(latex2exp)
+library(gridExtra)
+```
+
+*This document was last updated at `r Sys.time()`.*
+
+This document is dedicated to fitting a regression to model the choice data instead of using an ANOVA.
+
+Redoing the analysis except only on the final 50 trials from each block.
+
+```{r}
+d <- read.csv('../../../../data/dstClean.csv')
+N <- d %>% 
+  group_by(subject) %>% 
+  summarize(n()) %>% 
+  nrow()
+head(d)
+
+## CRITICAL LINE
+d <- d[d$trial >= 50,]
+```
+
+
+
+## Basic Regression
+
+Fitting a basic quadratic regression to subject cell means reveals a significant, negative quadratic trend (in line with concave model):
+
+```{r}
+test <- d %>% 
+  group_by(subject, condition) %>% 
+  summarize(srd = mean(srd)) %>% 
+  mutate(condition2 = condition^2)
+
+m1 <- lm(srd ~ condition + condition2, data = test)
+
+newdata <- data.frame(condition = seq(.1,.9,.01))
+newdata$condition2 <- newdata$condition^2
+newdata <- cbind(newdata, predict(m1, interval = 'predict', newdata = newdata))
+
+newdata %>% 
+  ggplot(aes(x = condition, y = fit)) + 
+  geom_line(data = test, aes(x = condition, y = srd, group = subject), linetype = 'dashed', alpha = .4) + 
+  geom_line(size = 2, color = 'blue') + 
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = .2) + 
+  #ylim(-.5,1) + 
+  labs(
+    x = 'Probability of Switching for Critical Deck',
+    y = 'Proportion Selection of Reference Deck'
+  ) + 
+  scale_x_continuous(breaks = c(.1,.3,.7,.9), labels = c(.1,.3,.7,.9)) +
+  theme_bw() +
+  theme(axis.ticks = element_blank())
+  
+```
+
+```{r}
+summary(m1)
+```
+
+This approach, in addition to being coarse, doesn't do anything to test the prospect hypothesis.
+
+## Baseline Spline Model
+
+The general form and approach to the spline model is as follows:
+
+$$
+\hat{Y} = \beta_0 + \beta_1X_1 + D_1\beta_{21}X_1^2 + D_2\beta_{22}X_1^2
+$$
+
+Where $\hat{Y}$ is the binary response, $\beta_0$ and $\beta_1$ are the intercept and linear slope, respectively, $X_1$ is condition (ie, probability of switching for critical deck), $\beta_{21}$ and $\beta_{22}$ are the non-linear parameters, the $D$s represent dummy-coded variables that will 'activate' either non-linear component of the formula depending on an arbitrary criterion on $X_1$. The idea is that this model allows to test between the four different hypotheses using only one formulation, and the winning hypothesis should be clear based on the significance and sign of the coefficients. 
+
+```{r}
+d$condition_c <- d$condition - 0.5
+d$condition_c2 <- d$condition_c^2
+d$dummy_pos <- ifelse(d$condition_c > 0, 1, 0)
+d$dummy_neg <- ifelse(d$condition_c <= 0, 1, 0)
+
+m2 <- lm(srd ~ condition_c + condition_c2:dummy_pos + condition_c2:dummy_neg, data = d)
+summary(m2)
+
+newdata <- data.frame(condition_c = seq(-.5,.5,.01))
+newdata$condition_c2 <- newdata$condition_c^2
+newdata$dummy_pos <- ifelse(newdata$condition_c > .5, 1, 0)
+newdata$dummy_neg <- ifelse(newdata$condition_c <= .5, 1, 0)
+newdata$condition <- seq(0,1,.01)
+newdata$condition2 <- newdata$condition^2
+newdata <- cbind(newdata, predict(m2, newdata = newdata, interval = 'predict'))
+
+
+newdata %>% 
+  ggplot(aes(x = condition, y = fit)) + 
+  #geom_jitter(data = d, aes(x = condition, y = srd), height = 0, alpha = .2) +
+  geom_violin(data = d, aes(x = condition, y = srd, group = condition)) + 
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = .2)+
+  geom_line() +
+  labs(
+    x = 'Probability Switching of Critical Deck',
+    y = 'Selection of Reference Deck'
+  ) + 
+  scale_x_continuous(breaks = c(.1,.3,.7,.9), labels = c(.1,.3,.7,.9)) +
+  theme_bw() + 
+  theme(axis.ticks = element_blank())
+  
+```
+
+
+## Spline Model with Logit Link
+
+```{r}
+m3 <- glm(srd ~ condition_c + dummy_pos:condition_c2 + dummy_neg:condition_c2, data = d, family = binomial(link = 'logit'))
+
+newdata <- data.frame(condition_c = seq(-.5,.5,.01))
+newdata$condition_c2 <- newdata$condition_c^2
+newdata$dummy_pos <- ifelse(newdata$condition_c > .5, 1, 0)
+newdata$dummy_neg <- ifelse(newdata$condition_c <= .5, 1, 0)
+newdata$condition <- seq(0,1,.01)
+newdata$condition2 <- newdata$condition^2
+newdata <- cbind(newdata, data.frame(predict(m3, newdata = newdata, type = 'response', se.fit = TRUE)))
+
+summary(m3)
+
+
+newdata %>% 
+  ggplot(aes(x = condition, y = fit)) + 
+  #geom_jitter(data = d, aes(x = condition, y = srd), height = 0, alpha = .2) +
+  geom_violin(data = d, aes(x = condition, y = srd, group = condition)) + 
+  geom_ribbon(aes(ymin = fit - se.fit, ymax = fit + se.fit), alpha = .2)+
+  geom_line() +
+  labs(
+    x = 'Probability Switching of Critical Deck',
+    y = 'Selection of Reference Deck'
+  ) + 
+  scale_x_continuous(breaks = c(.1,.3,.7,.9), labels = c(.1,.3,.7,.9)) +
+  theme_bw() + 
+  theme(axis.ticks = element_blank())
+```
+
+Yea, I like where this is going.
+
+## Spline Model with Logit Link and Random Effects
+
+Let the games begin.
+
+I think all I'll do ahead of model fitting is just visualize some descriptive intercept variability.
+
+```{r}
+d %>% 
+  group_by(subject) %>% 
+  summarize(srd = mean(srd)) %>% 
+  ggplot(aes(x = reorder(subject, srd), y = srd)) +
+  geom_point(shape = 17) + 
+  geom_hline(yintercept = .5, linetype = 'dashed') +
+  labs(
+    x = 'Subject',
+    y = 'Proportion Selection of Reference Deck'
+  ) + 
+  ylim(0,1) +
+  theme_bw() +
+  theme(axis.ticks = element_blank(),
+        axis.text.y = element_blank(),
+        panel.grid = element_blank()) +
+  coord_flip()
+```
+
+
+### Model fits
+
+```{r eval = FALSE}
+## failed to converge
+# m_max <- glmer(srd ~ condition_c + dummy_pos:condition_c2 + dummy_neg:condition_c2 + 
+#                  (1 + condition_c + dummy_pos:condition_c2 + dummy_neg:condition_c2 | subject),
+#                data = d, family = binomial(link = 'logit'), control = glmerControl(optimizer = 'bobyqa'), nAGQ = 1)
+
+m_1 <- glmer(srd ~ condition_c + dummy_pos:condition_c2 + dummy_neg:condition_c2 + 
+                 (1 + condition_c + dummy_pos:condition_c2 | subject) +
+                 (0 + dummy_neg:condition_c2 | subject),
+               data = d, family = binomial(link = 'logit'), control = glmerControl(optimizer = 'bobyqa'), nAGQ = 1)
+
+m_2 <- glmer(srd ~ condition_c + dummy_pos:condition_c2 + dummy_neg:condition_c2 + 
+              (1 + condition_c | subject) +
+              (0 + dummy_neg:condition_c2 | subject) +
+              (0 + dummy_pos:condition_c2 | subject),
+               data = d, family = binomial(link = 'logit'), control = glmerControl(optimizer = 'bobyqa'), nAGQ = 1)
+
+save(m_1, m_2, file = 'glmer_models.RData')
+
+```
+
+
+```{r}
+load('glmer_models.RData')
+
+anova(m_1, m_2)
+```
+
+
+Even though it was a two-parameter step down (because I'm not sure how to specify only dropping one covariance), I'll take the more complex model as the best fitting. 
+
+
+### Diagnostics and Model Summaries
+
+```{r}
+d$resid <- resid(m_1)
+
+d %>% 
+  ggplot(aes(x = factor(condition), y = resid)) + 
+  geom_boxplot() + 
+  labs(
+    x = 'Probability of Switching for Critical Deck',
+    y = 'Residual'
+  ) + 
+  scale_x_discrete(breaks = c(.1, .3, .7, .9), labels = c(.1, .3, .7, .9)) + 
+  theme_bw() +
+  theme(axis.ticks = element_blank(),
+        panel.grid = element_blank()) +
+  coord_flip()
+  
+```
+
+
+```{r}
+rans <- data.frame(ranef(m_1, condVar = TRUE))
+
+p1 <- rans %>% 
+  filter(term == '(Intercept)') %>% 
+  ggplot(aes(x = reorder(grp, condval), y = condval)) + 
+  geom_errorbar(aes(ymin = condval - condsd, ymax = condval + condsd), width = 0) +
+  geom_point() +
+  labs(
+    x = 'Subject',
+    y = 'Intercept'
+  ) + 
+  theme_bw() + 
+  theme(axis.ticks = element_blank(),
+        axis.text.y = element_blank()) +
+  coord_flip()
+
+p2 <- rans %>% 
+  filter(term == 'condition_c') %>% 
+  ggplot(aes(x = reorder(grp, condval), y = condval)) + 
+  geom_errorbar(aes(ymin = condval - condsd, ymax = condval + condsd), width = 0) +
+  geom_point() +
+  labs(
+    x = '',
+    y = 'Linear'
+  ) + 
+  theme_bw() + 
+  theme(axis.ticks = element_blank(),
+        axis.text.y = element_blank()) +
+  coord_flip()
+
+p3 <- rans %>% 
+  filter(term == 'dummy_pos:condition_c2') %>% 
+  ggplot(aes(x = reorder(grp, condval), y = condval)) + 
+  geom_errorbar(aes(ymin = condval - condsd, ymax = condval + condsd), width = 0) +
+  geom_point() +
+  labs(
+    x = '',
+    y = 'Quadratic Above Ref'
+  ) + 
+  theme_bw() + 
+  theme(axis.ticks = element_blank(),
+        axis.text.y = element_blank()) +
+  coord_flip()
+
+p4 <- rans %>% 
+  filter(term == 'dummy_neg:condition_c2') %>% 
+  ggplot(aes(x = reorder(grp, condval), y = condval)) + 
+  geom_errorbar(aes(ymin = condval - condsd, ymax = condval + condsd), width = 0) +
+  geom_point() +
+  labs(
+    x = '',
+    y = 'Quadratic Below Ref'
+  ) + 
+  theme_bw() + 
+  theme(axis.ticks = element_blank(),
+        axis.text.y = element_blank()) +
+  coord_flip()
+
+grid.arrange(p1,p2,p3,p4, nrow = 1)
+
+```
+
+
+## Inference
+
+```{r}
+## too expensive
+#m1_CI_prof <- confint(m_1, maxpts = 8)
+m1_CI_quad <- confint(m_1, method = 'Wald')
+#m1_CI_boot <- confint(m_1, method = 'boot')
+# 
+# CIs <- data.frame(m1_CI_prof)
+# CIs$factor <- row.names(CIs)
+# CIs$method <- 'prof'
+
+t1 <- data.frame(m1_CI_quad)
+t1$factor <- row.names(t1)
+t1$method <- 'Wald'
+CIs <- t1
+
+# t2 <- data.frame(m1_CI_boot)
+# t2$factor <- row.names(t2)
+# t2$method <- 'boot'
+# 
+# CIs <- rbind(CIs, t1, t2)
+
+CIs <- CIs %>% 
+  filter(!grepl('.sig', factor))
+colnames(CIs)[1:2] <- c('lower', 'upper')
+CIs$estimate <- fixef(m_1)
+
+#save(CIs, file = 'CIs.RData')
+
+CIs %>% 
+  ggplot(aes(x = factor, y = estimate)) +
+  geom_hline(yintercept = 0, linetype = 'dotted') +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = 0) +
+  geom_point() +
+  coord_flip()+
+  scale_x_discrete(labels = c(`(Intercept)` = 'Intercept', `condition_c` = 'Linear', `condition_c2:dummy_neg` = 'Quadratic Below Ref', `dummy_pos:condition_c2` = 'Quadratic Above Ref')) +
+  labs(
+    y = 'Effect (log odds of choosing safe deck)',
+    x = ''
+  ) +
+  theme_bw() 
+
+```
+
+
+
+## Hypothesis Testing
+
+Via likelihood ratio tests:
+
+```{r eval = FALSE}
+m_1_nolinear <- update(m_1, .~.-condition_c)
+m_1_nonegquad <- update(m_1, .~.-dummy_neg:condition_c2, control = glmerControl(optimizer = 'bobyqa'))
+m_1_noposquad <- update(m_1, .~.-dummy_pos:condition_c2)
+m_1_noint <- glmer(srd ~ 0 + condition_c + dummy_pos:condition_c2 + dummy_neg:condition_c2 + 
+                 (1 + condition_c + dummy_pos:condition_c2 | subject) +
+                 (0 + dummy_neg:condition_c2 | subject),
+               data = d, family = binomial(link = 'logit'), control = glmerControl(optimizer = 'bobyqa'), nAGQ = 1)
+
+save(m_1_nolinear, m_1_nonegquad, m_1_noposquad, m_1_noint, file = 'lrt_models.Rdata')
+```
+
+
+```{r}
+load('lrt_models.Rdata')
+
+## convert estimates to odds ratios
+vc <- as.data.frame(VarCorr(m_1))
+vc <- vc[is.na(vc$var2),]$sdcor
+result <- exp(cbind(est = fixef(m_1), confint(m_1, parm = 'beta_', method = 'Wald')))
+result <- cbind(data.frame(estLogOdds = fixef(m_1), sdLogOdds = vc), result)
+
+chisq <- anova(m_1, m_1_noint)$Chisq[2]
+p <- anova(m_1, m_1_noint)$`Pr(>Chisq)`[2]
+chisq <- append(chisq, anova(m_1, m_1_nolinear)$Chisq[2])
+p <- append(p, anova(m_1, m_1_nolinear)$`Pr(>Chisq)`[2])
+chisq <- append(chisq, anova(m_1, m_1_noposquad)$Chisq[2])
+p <- append(p, anova(m_1, m_1_noposquad)$`Pr(>Chisq)`[2])
+chisq <- append(chisq, anova(m_1, m_1_nonegquad)$Chisq[2])
+p <- append(p, anova(m_1, m_1_nonegquad)$`Pr(>Chisq)`[2])
+waldp <- c(NA, car::Anova(m_1)$`Pr(>Chisq)`)
+
+result <- cbind(result, data.frame(Wald = waldp, chisq = chisq, chisq_p = p))
+colnames(result)[4:5] <- c('LwrCI', 'UprCI')
+```
+
+**Final result:**
+```{r}
+data.frame(result)
+```
+
+
+## Prediction
+
+```{r}
+easyPredCI <- function(model,newdata=NULL,alpha=0.05) {
+    ## baseline prediction, on the linear predictor (logit) scale:
+    pred0 <- predict(model,re.form=NA,newdata=newdata)
+    ## fixed-effects model matrix for new data
+    X <- model.matrix(formula(model,fixed.only=TRUE)[-2],newdata)
+    beta <- fixef(model) ## fixed-effects coefficients
+    V <- vcov(model)     ## variance-covariance matrix of beta
+    pred.se <- sqrt(diag(X %*% V %*% t(X))) ## std errors of predictions
+    ## inverse-link function
+    linkinv <- family(model)$linkinv
+    ## construct 95% Normal CIs on the link scale and
+    ##  transform back to the response (probability) scale:
+    crit <- -qnorm(alpha/2)
+    linkinv(cbind(conf.low=pred0-crit*pred.se,
+                  conf.high=pred0+crit*pred.se))
+}
+```
+
+
+```{r}
+newdata <- data.frame(condition_c = seq(-.5, .5, .01))
+newdata$condition_c2 <- newdata$condition_c^2
+newdata$dummy_neg <- ifelse(newdata$condition_c <= 0, 1, 0)
+newdata$dummy_pos <- ifelse(newdata$condition_c > 0, 1, 0)
+
+pred <- predict(m_1, re.form = NA, newdata = newdata, type = 'response')
+pred.CI <- easyPredCI(m_1, newdata)
+
+newdata <- cbind(newdata, data.frame(est = pred), pred.CI)
+
+## get subject cell means
+sm <- d %>% 
+  group_by(subject, condition) %>% 
+  summarize(srd = mean(srd))
+
+## get condition means
+cm <- d %>% 
+  group_by(condition) %>% 
+  summarize(obs = mean(srd), se = mean(srd) / sqrt(N))
+
+
+newdata %>% 
+  mutate(condition = condition_c + 0.5) %>% 
+  ggplot(aes(x = condition, y = est)) + 
+    geom_vline(xintercept = 0.5, linetype = 'dotted') +
+    #geom_line(data = sm, aes(x = condition, y = srd, group = subject), linetype = 'dashed', alpha = .1) +
+    geom_violin(data = d, aes(x = condition, y = srd, group = condition)) + 
+    geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .2) +
+    geom_line() +
+    geom_point(data = cm, aes(x = condition, y = obs), size = 2) + 
+    geom_errorbar(data = cm, aes(x = condition, ymin = obs - se, ymax = obs + se, y = obs), width = .05) +
+    ylim(0,1) +
+    labs(
+      x = 'Critical Deck Probability of Switching',
+      y = 'Probability of Selecting Reference Deck'
+    ) +
+    theme_bw() +
+    theme(axis.ticks = element_blank(),
+          panel.grid = element_blank())
+
+write.csv(newdata, 'plot_data_ff.csv', row.names = FALSE)
+```
+
+With subject means:
+
+```{r}
+
+newdata %>% 
+  mutate(condition = condition_c + 0.5) %>% 
+  ggplot(aes(x = condition, y = est)) + 
+    geom_vline(xintercept = 0.5, linetype = 'dotted') +
+    geom_line(data = sm, aes(x = condition, y = srd, group = subject), linetype = 'dashed', alpha = .2) +
+    geom_point(data = sm, aes(x = condition, y = srd, group = subject), alpha = .2) +
+    #geom_violin(data = d, aes(x = condition, y = srd, group = condition)) + 
+    geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = .2) +
+    geom_line() +
+    geom_errorbar(data = cm, aes(x = condition, ymin = obs - se, ymax = obs + se, y = obs), width = .05) +  
+    geom_point(data = cm, aes(x = condition, y = obs), size = 4, color = 'blue') + 
+    ylim(0,1) +
+    labs(
+      x = 'Critical Deck Probability of Switching',
+      y = 'Probability of Selecting Reference Deck'
+    ) +
+    theme_bw() +
+    theme(axis.ticks = element_blank(),
+          panel.grid = element_blank())
+    
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -45,6 +45,7 @@ d %>%
   summarize(choiceRt = mean(choiceRt)) %>% 
   group_by(difference, difficulty) %>% 
   summarize(rt = mean(choiceRt), se = sd(choiceRt) / sqrt(N)) %>% 
+  print() %>% 
   ggplot(aes(x = difficulty, y = rt, group = difference)) +
   geom_bar(stat = 'identity', aes(fill = difference), position = pd) +
   geom_errorbar(aes(ymin = rt - se, ymax = rt + se), position = pd, width = .5) +
@@ -69,9 +70,77 @@ m1
 
 
 
+# Flattened Design
+
+## Observed data
+
+```{r}
+## need to code which deck was CHOSEN, not the condition
+d$condition_number <- ifelse(d$chosenDeckLocation == 'left', d$leftDeckSwitch, d$rightDeckSwitch)
+
+subject_means <- d %>% 
+  group_by(subject, condition_number) %>% 
+  summarize(choiceRt = mean(choiceRt)) 
+
+subject_means %>% 
+  group_by(condition_number) %>% 
+  summarize(crt = mean(choiceRt), se = sd(choiceRt) / sqrt(N)) %>% 
+  ggplot(aes(x = factor(condition_number), crt, group = 1)) +
+  geom_jitter(data = subject_means, aes(x = factor(condition_number), y = choiceRt), alpha = .3, width = .15) +
+  geom_line() +
+  geom_errorbar(aes(ymin = crt - se, ymax = crt + se), width = 0.5) +
+  geom_point(size = 2)  + 
+  ylim(0,1200) + 
+  labs(
+    x = 'Chosen Deck Probability of Switching',
+    y = 'Choice Response Time (ms)'
+  ) +
+  theme_bw() +
+  theme(panel.grid = element_blank())
+  
+```
 
 
+## Fit a linear model
 
+```{r}
+d$iv <- d$condition_number * 10
+mdisplay <- lm(choiceRt ~ iv, data = d)
+print(summary(mdisplay))
+print(confint(mdisplay))
+
+m1 <- lm(choiceRt ~ condition_number, data = d)
+```
+
+```{r}
+test_data <- data.frame(condition_number = seq(0.1, 0.9, 0.2))
+test_data <- cbind(test_data, predict(m1, newdata = test_data, interval = 'predict'))
+print(test_data)
+
+subject_means <- d %>% 
+  group_by(subject, condition_number) %>% 
+  summarize(choiceRt = mean(choiceRt)) 
+
+subject_means %>% 
+  group_by(condition_number) %>% 
+  summarize(crt = mean(choiceRt), se = sd(choiceRt) / sqrt(N)) %>% 
+  ggplot(aes(x = factor(condition_number), crt, group = 1)) +
+  geom_jitter(data = subject_means, aes(x = factor(condition_number), y = choiceRt), alpha = .3, width = .15) +
+  geom_line() +
+  geom_errorbar(aes(ymin = crt - se, ymax = crt + se), width = 0.5) +
+  geom_point(size = 2) +
+  geom_line(data = test_data, aes(x = factor(condition_number), y = fit), color = 'blue', size = 2) + 
+  geom_point(data = test_data, aes(x = factor(condition_number), y = fit), size = 2, color = 'blue') + 
+  geom_ribbon(data = test_data, aes(ymin = lwr, ymax = upr, x = factor(condition_number), y = fit), alpha = .2, fill = 'blue') +
+  labs(
+    x = 'Chosen Deck Probability of Switching',
+    y = 'Mean Choice Response Time (ms)',
+    caption = 'Color band represents 95% prediction interval around estimates from linear model.'
+  ) + 
+  theme_bw() +
+  theme(panel.grid = element_blank())
+  
+```
 
 
 

@@ -1,0 +1,95 @@
+---
+title: "Experiment 3 Exploratory Choice Analyses"
+author: "Dave Braun"
+date: "7/21/2019"
+output: 
+  html_document:
+    code_folding: hide
+    df_print: paged
+    includes:
+      after_body: ../../../../footer.html
+      in_header: ../../../../favicon.html
+knit:
+  (function(inputFile, encoding) {
+      rmarkdown::render(inputFile,
+                    encoding = encoding,
+                    output_file = 'index.html')})
+---
+```{r include = FALSE}
+library(tidyverse)
+library(data.table)
+```
+
+
+*This document was last updated at `r Sys.time()`.*
+
+This document is dedicated to trying to get a better handle on what happened in the Experiment 3 choice data. I'm going to try to break down selections by time (ie, cycle in the experiment), because that's all I can really think of that might give some extra clarity into what happened.
+
+```{r}
+d <- read.csv('../../../data/dstCleanChoice2.csv')
+N <- d %>% 
+  group_by(subject) %>% 
+  summarize(n()) %>% 
+  nrow()
+head(d)
+```
+
+
+```{r}
+d <- d %>% 
+  mutate(ssd = ifelse(selectedRiskyDeck == 1, 0, 1))
+choiceGroup <- d %>% 
+  group_by(subject, difficulty) %>% 
+  summarize(ssd = mean(ssd)) %>% 
+  spread(difficulty, ssd) %>% 
+  mutate(choiceDiff = abs(`Harder than Reference` - `Easier than Reference`)) %>% 
+  select(subject, choiceDiff) %>% 
+  ungroup() %>% 
+  summarize(choiceDiff_m = mean(choiceDiff), choiceDiff_s = sd(choiceDiff))
+d <- d %>% 
+  group_by(subject, difficulty) %>% 
+  summarize(ssd = mean(ssd)) %>% 
+  spread(difficulty, ssd) %>% 
+  mutate(choiceDiff = abs(`Harder than Reference` - `Easier than Reference`)) %>% 
+  #mutate(choiceGroup = ifelse(choiceDiff >= choiceGroup$choiceDiff_m + choiceGroup$choiceDiff_s, 'highBias', 'lowBias')) %>% 
+  mutate(choiceGroup = ifelse(choiceDiff >= .3, 'highBias', 'lowBias')) %>% 
+  select(subject, choiceGroup) %>% 
+  inner_join(d, by = 'subject')
+
+d$cycleCount <- cut(d$choiceTrial, seq(0,40,10))
+
+d %>% 
+  group_by(subject, cycleCount, choiceGroup, difficulty) %>% 
+  summarize(ssd = mean(ssd)) %>% 
+  ggplot(aes(x = cycleCount, y = ssd, group = subject)) + 
+  geom_line(alpha = .3) +
+  facet_grid(choiceGroup ~ difficulty) + 
+  scale_x_discrete(labels = c('1-10', '11-20', '21-30', '31-40')) + 
+  labs(
+    x = 'Choice Trial',
+    y = 'Proportion Selection of Safe Deck'
+  ) + 
+  theme_bw() + 
+  theme(legend.position = 'none',
+        strip.background = element_rect(fill = 'white', color = 'black')) 
+```
+
+
+I don't think there's much to see here. Seems as though selection strategy didn't change much over the course of the experiment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

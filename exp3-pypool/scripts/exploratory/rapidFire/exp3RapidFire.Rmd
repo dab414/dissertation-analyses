@@ -1,0 +1,355 @@
+---
+title: "Experiment 3 Pypool Rapid Fire"
+author: "Dave Braun"
+date: "7/21/2019"
+output: 
+  html_document:
+    code_folding: hide
+    df_print: paged
+    includes:
+      after_body: ../../../../footer.html
+      in_header: ../../../../favicon.html
+knit:
+  (function(inputFile, encoding) {
+      rmarkdown::render(inputFile,
+                    encoding = encoding,
+                    output_file = 'index.html')})
+---
+```{r include = FALSE}
+library(tidyverse)
+library(ggridges)
+library(data.table)
+library(ggExtra)
+```
+```{r include = FALSE, eval = FALSE}
+setwd('/home/dave/Dropbox (Lehigh University)/Research/By Project/Dissertation/experiments/analysis/exp2/scripts/exploratory/rapidFire/')
+```
+
+
+*This document was last updated at `r Sys.time()`.*
+
+This document is dedicated to exploring the Experiment 3 with pypool data choice data from the rapid fire phase against that from the demand selection task phase. The general purpose is to assess whether or not this choice data is usable.  
+
+Load and view the rapid fire data:
+
+```{r}
+dst <- read.csv('../../../data/dstCleanChoice1.csv')
+rapidFire <- read.csv('../../../data/rapidFireClean.csv')
+N <- dst %>% 
+  group_by(subject) %>% 
+  summarize(n()) %>% 
+  nrow()
+head(rapidFire)
+```
+**The sample size is `r N`.**
+
+## Rapid Fire
+
+In the document I said that I would drop all subjects with a mean choice RT longer than 1 s, but in retrospect I don't know about that because I would *expect* RTs to be under this. I had the instinct to plot the predicted effects broken down by phase but then realized that that information should *not* be used to decide whether the rapid fire data should be included in the overall analysis. So, even though plotting the effects by phase seems like an obvious thing to do here, I'm going to explicitly refrain from doing it.  
+
+Let's compare the rt distributions for each subject:  
+
+Randomly selecting 15 subjects to look at using this cool new plot I found:
+
+```{r}
+## temp
+ranSubjects <- dst$subject
+#ranSubjects <- sample(unique(dst$subject), 15)
+
+d <- dst %>% 
+  select(subject, choiceRt) %>% 
+  rename(dstChoiceRt = choiceRt) %>% 
+  inner_join(rapidFire) %>% 
+  rename(rfChoiceRt = choiceRt) %>% 
+  select(subject, rfChoiceRt, dstChoiceRt) %>% 
+  gather(phase, rt, rfChoiceRt, dstChoiceRt) %>% 
+  filter(rt < 5000)
+  
+d %>% 
+  filter(subject %in% ranSubjects) %>% 
+  mutate(subject = as.factor(subject)) %>% 
+  ggplot(aes(x = rt, y = subject)) + 
+  ## scale controls how much the densities overlap -- higher numbers = more overlap
+  geom_density_ridges(aes(fill = phase), alpha = 0.8, color = 'white', scale = 1.3) +
+  scale_fill_cyclical(name = 'Phase',  
+                      labels = c(`dstChoiceRt` = 'Demand Selection Task', `rfChoiceRt` = 'Rapid Fire'), 
+                      values = c('#ff0000', '#0000ff', '#ff8080', '#8080ff'), guide = 'legend') + 
+  theme_ridges(grid = FALSE) +
+  labs(
+    x = 'Response Time (ms)',
+    y = 'Subject',
+    title = 'Response times across the two choice phases of the experiment',
+    subtitle = 'Are people just spamming their way through the rapid fire choices?'
+  ) +
+  theme(legend.position = 'bottom',
+        axis.text.y = element_blank())
+```
+
+Now doing it in a way that better captures all subject data:  
+
+```{r}
+d %>% 
+  group_by(subject, phase) %>% 
+  summarize(rtTime = mean(rt), s = sd(rt)) %>% 
+  rename(rt = rtTime) %>% 
+  ggplot(aes(x = subject, y = rt, group = phase)) +
+  geom_point(aes(color = phase)) +
+  geom_errorbar(aes(ymin = rt - s, ymax = rt + s), width = 0.5) +
+  scale_color_manual(name = 'Phase', values = c(dstChoiceRt = 'red', rfChoiceRt = 'blue'), labels = c(dstChoiceRt = 'Demand Selection Phase', rfChoiceRt = 'Rapid Fire Phase')) +
+  labs(
+    x = 'Subject',
+    y = 'Response Time (ms)',
+    caption = 'Bars reflect one standard deviation'
+  ) + 
+  theme_bw() +
+  coord_flip() +
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        legend.position = 'bottom')
+```
+
+```{r}
+cutoffTable <- data.table(d)[, .(m = mean(rt), s = sd(rt)), by = .(subject, phase)][, .(m = mean(m), s = sd(m), ms = mean(s), ss = sd(s)), by = phase]
+dstRtCutoff <- cutoffTable[phase=='dstChoiceRt', m - 2 * s]
+dstSdCutoff <- cutoffTable[phase=='dstChoiceRt', ms - 2 * ss]
+rfRtCutoff <- cutoffTable[phase=='rfChoiceRt', m - 2 * s]
+rfSdCutoff <- cutoffTable[phase=='rfChoiceRt', ms - 2 * ss]
+
+p <- d %>% 
+  group_by(subject, phase) %>% 
+  summarize(rtTime = mean(rt), s = sd(rt)) %>% 
+  rename(rt = rtTime) %>% 
+  ggplot(aes(x = rt, y = s, group = phase)) +
+  geom_point(aes(color = phase)) +
+  scale_color_manual(name = 'Phase', values = c(dstChoiceRt = 'red', rfChoiceRt = 'blue'), labels = c(dstChoiceRt = 'Demand Selection Phase', rfChoiceRt = 'Rapid Fire Phase')) +
+  geom_vline(xintercept = dstRtCutoff, linetype = 'dashed', color = 'red') + 
+  geom_hline(yintercept = dstSdCutoff, linetype = 'dashed', color = 'red') + 
+  geom_vline(xintercept = rfRtCutoff, linetype = 'dashed', color = 'blue') + 
+  geom_hline(yintercept = rfSdCutoff, linetype = 'dashed', color = 'blue') + 
+  labs(
+    x = 'Response Time (ms)',
+    y = 'Standard Deviation',
+    caption = 'Dashed lines represent 2 SDs below the group mean by phase and dimension.'
+  ) + 
+  theme_bw() +
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        legend.position = 'bottom')
+ggMarginal(p = p, type = 'histogram', groupFill = TRUE)
+```
+```{r}
+s <- data.table(d)[phase == 'rfChoiceRt', .(rt = mean(rt)), by = subject][rt < 200, as.numeric(subject)]
+badRfSubjects <- data.frame(subject = s, reason = rep('Spammed through rapid fire phase', length(s)))
+```
+
+I'm dropping that small cluster of subjects from the rapid fire data with extremely low RTs and SDs.
+
+```{r}
+d %>% 
+  group_by(subject, phase) %>% 
+  summarize(rt = mean(rt)) %>% 
+  ggplot(aes(x = rt, y = phase)) +
+  #geom_density(aes(fill = phase), color = 'black', alpha = 0.2)
+  geom_density_ridges(aes(fill = phase), alpha = 0.7, scale = 2, color = 'white') +
+  scale_fill_manual(name = 'Phase', values = c(dstChoiceRt = 'red', rfChoiceRt = 'blue'), labels = c(dstChoiceRt = 'Demand Selection Phase', rfChoiceRt = 'Rapid Fire Phase')) +
+  labs(x = 'Response Time (ms)', caption = 'Histograms represent distribution of subject means') +
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        legend.position = 'bottom')
+  
+```
+!
+
+I can also try to get a sense of whether people are spamming through the rapid fire by looking at proportion selection of left / right deck throughout the phase.
+
+```{r}
+d <- rapidFire %>% 
+  mutate(rfChoice = ifelse(selectedDeckLocation == 'right', 1, 0)) %>% 
+  select(subject, rfChoice) %>% 
+  inner_join(dst) %>% 
+  mutate(dstChoice = ifelse(selectedDeckLocation == 'right', 1, 0),
+         subject = as.factor(subject)) %>% 
+  gather(phase, isRight, rfChoice, dstChoice) %>% 
+  mutate(phase = as.factor(phase)) %>% 
+  mutate(phase = recode(phase, 'dstChoice' = 'Demand Selection Phase', 'rfChoice' = 'Rapid Fire Phase')) %>% 
+  group_by(subject, phase) %>% 
+  summarize(right = mean(isRight), sd = sd(isRight)) 
+d %>% 
+  ggplot(aes(x = subject, y = right)) + 
+  geom_point(size = 3, shape = 18) +
+  geom_hline(yintercept = 0.5, linetype = 'dashed') + 
+  facet_wrap(~phase) +
+  theme_bw() + 
+  coord_flip() +
+  ylim(0, 1) +
+  labs(
+    x = 'Subject',
+    y = 'Proportion Selection of Right Deck',
+    title = 'Choice location bias across choice phases'
+  ) +
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        panel.grid = element_blank(),
+        strip.background = element_rect(fill = 'white', color = 'black'))
+```
+
+Visualize it as choosing at chance vs. fully biased choice.
+
+```{r}
+d <- d %>% 
+  mutate(totalBias = ifelse(right < .5, 1 - right, right)) 
+
+dstCutoff <- data.table(d)[phase == 'Demand Selection Phase', .(m = mean(right), s = sd(right))][,m+2*s]
+rfCutoff <- data.table(d)[phase == 'Rapid Fire Phase', .(m = mean(right), s = sd(right))][,m+2*s]
+
+d %>% 
+  ggplot(aes(x = subject, y = totalBias)) + 
+  geom_point(size = 3, shape = 18) +
+  geom_hline(yintercept = 0.5, linetype = 'dashed') + 
+  geom_hline(yintercept = 0.9, linetype = 'dashed', color = 'red') +
+  facet_wrap(~phase) +
+  geom_hline(data = filter(d, phase == 'Demand Selection Phase'), aes(yintercept = dstCutoff), color = 'blue', linetype = 'dashed') +
+  geom_hline(data = filter(d, phase == 'Rapid Fire Phase'), aes(yintercept = rfCutoff), color = 'blue', linetype = 'dashed') +
+  theme_bw() + 
+  coord_flip() +
+  ylim(0.5, 1) +
+  labs(
+    x = 'Subject',
+    y = 'Proportion Selection of Either Right or Left Deck',
+    title = 'Choice location bias across choice phases',
+    caption = 'Red line represents 90%. Blue line represnts 2 SDs above group mean.'
+  ) +
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        panel.grid = element_blank(),
+        strip.background = element_rect(fill = 'white', color = 'black'))
+```
+I'm dropping all subjects who are more extreme than the blue line (+2 SDs) for both rapid fire and DST.
+```{r}
+s <- data.table(d)[totalBias > dstCutoff & phase == 'Demand Selection Phase',as.numeric(subject)]
+badDstSubjects <- data.frame(subject = s, reason = rep('Exceeded choice location bias in DST phase', length(s)))
+s <- data.table(d)[totalBias > rfCutoff & phase == 'Rapid Fire Phase',as.numeric(subject)]
+badRfSubjects <- rbind(badRfSubjects, data.frame(subject = s, reason = rep('Exceeded choice location bias in Rapid Fire phase', length(s))))
+```
+
+
+Choice correlation between phases
+
+```{r}
+d <- rapidFire %>% 
+  mutate(rfSsd = ifelse(selectedRiskyDeck, 0, 1)) %>% 
+  select(subject, rfSsd) %>% 
+  inner_join(dst) %>% 
+  mutate(dstSsd = ifelse(selectedRiskyDeck, 0, 1),
+         subject = as.factor(subject)) %>% 
+  gather(phase, SSD, rfSsd, dstSsd) %>% 
+  mutate(phase = as.factor(phase)) %>% 
+  mutate(phase = recode(phase, 'dstChoice' = 'Demand Selection Phase', 'rfChoice' = 'Rapid Fire Phase')) %>% 
+  group_by(subject, phase) %>% 
+  summarize(ssd = mean(SSD), sd = sd(SSD)) 
+
+corData <- d %>% 
+  select(-sd) %>% 
+  spread(phase, ssd)
+
+c1 <- cor.test(corData$dstSsd, corData$rfSsd)
+est <- round(c1$estimate, 2)
+pval <- round(c1$p.value, 3)
+df <- c1$parameter
+
+p <- ggplot(corData, aes(x = dstSsd, rfSsd)) +
+  geom_point() + 
+  geom_smooth(method = 'lm') +
+  annotate('text', label = paste('r(', df, ') = ', est, ', ', ifelse(pval < .001, 'p < .001.', paste('p = ', pval, '.')), sep = ''), x = 0.2, y = 0.8) +
+  labs(
+    title = 'Proportion Selection of Safe Deck by Phase',
+    x = 'Demand Selection Phase',
+    y = 'Rapid Fire Phase',
+    caption = 'Points represent subject proportions'
+  ) +
+  theme_bw()
+ggMarginal(p = p, type = 'histogram')
+```
+
+
+
+
+
+Let's look at choice RT in rapid fire over time. Maybe people start out thinking about it for longer and then get frustrated toward the end.
+
+```{r}
+a <- rapidFire %>% 
+  select(subject, choiceRt, choiceTrial) %>% 
+  mutate(phase = 'Rapid Fire Phase')
+
+b <- dst %>% 
+  select(subject, choiceRt, choiceTrial) %>% 
+  mutate(phase = 'Demand Selection Phase')
+
+plotData <- rbind(a, b)
+
+plotData %>% 
+  ggplot(aes(x = choiceTrial, y = choiceRt, group = subject)) +
+  geom_line(alpha = 0.2) +
+  xlim(0, 40)+
+  facet_wrap(~phase) +
+  labs(
+    title = 'Choice response time over trial across the two choice phases',
+    x = 'Trial',
+    y = 'Response Time (ms)',
+    caption = 'Each line represents a different subject'
+  ) +
+  theme_bw() +
+  theme(strip.background = element_rect(fill = 'white', color = 'black'))
+```
+```{r}
+badDstSubjects
+badRfSubjects
+
+u <- sum(!(badRfSubjects$subject %in% badDstSubjects$subject))
+```
+There are `r u` subjects who have bad rapid fire data who do *not* also have bad dst data.
+
+```{r}
+rapidFire <- rapidFire[!(rapidFire$subject %in% badRfSubjects$subject), colnames(rapidFire)[colnames(rapidFire) %in% colnames(dst)]]
+
+d <- rbind(dst, rapidFire)
+
+d <- data.table(d)[!(subject %in% badDstSubjects$subject)]
+
+head(d)
+
+paste('Final N for quality choice is', d[,.N, by = subject][,.N])
+
+write.csv(d, '../../../data/dstCleanChoice2.csv', row.names = FALSE)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,7 +1,7 @@
 ---
 title: "Dissertation Analysis Homepage"
 author: "Dave Braun"
-date: "7/21/2019"
+date: "4/17/2020"
 output: 
   html_document:
     code_folding: hide
@@ -18,104 +18,144 @@ knit:
 
 This document is dedicated to organizing all the analyses of my dissertation.   
 
-My aspirations for this document are to make a multi-layered experience, where you can either get the quick highlights of an analysis or dive in for the full thing. For now (7/21), I'm just linking to the full analyses organized by experiment and type of analysis.  
 
 # {.tabset}
 ## Experiment 1
 ### Preprocessing  
-* [Preprocessing](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/preprocessing/){target=_blank}  
+* [Preprocessing](https://davebraun.net/dissertation/experiments/analysis/exp1/scripts/preprocessing/){target=_blank}  
   * The basic subject and RT-based trial trimming that was proposed in the document.  
 
 ### Confirmatory Analyses
-* [Choice Analyses](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/confirmatory/choice/){target=_blank}  
+* [Choice Analyses](https://davebraun.net/dissertation/experiments/analysis/exp1/scripts/confirmatory/choice/){target=_blank}  
   * The core 2 (difficulty) X 2 (difference) ANOVA that was proposed in the document.  
-* [Performance Analyses](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/confirmatory/performance/){target=_blank}  
+    * [Choice Analysis Final Fifty](https://davebraun.net/dissertation/experiments/analysis/exp1/scripts/confirmatory/choice/finalFifty)  
+      * Rerunning the confirmatory choice analyses for only the final fifty trials in each block to control for learning effects.  
+* [Performance Analyses](https://davebraun.net/dissertation/experiments/analysis/exp1/scripts/confirmatory/performance/){target=_blank}  
   * The 2 (difficulty) X 2 (difference) X 2 (transition) ANOVA (on RTs) that was proposed in the document.  
 
 ### Auxiliary Analyses
-* [Practice Cued Task Switching Analysis](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/auxiliary/pracCued/){target=_blank}  
+* [Practice Cued Task Switching Analysis](https://davebraun.net/dissertation/experiments/analysis/exp1/scripts/auxiliary/pracCued/){target=_blank}  
   * Testing for the switch cost for both RTs and error rates.
-* [Moving Reference Point Analysis](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/auxiliary/movingReference/){target=_blank}  
+* [Moving Reference Point Analysis](https://davebraun.net/dissertation/experiments/analysis/exp1/scripts/auxiliary/movingReference/){target=_blank}  
   * An analysis of whether the reference point might be shifting over time by looking for evidence of order effects in the choice data.  
-* [Learning Rate Analysis](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/auxiliary/learning/){target=_blank}  
+* [Learning Rate Analysis](https://davebraun.net/dissertation/experiments/analysis/exp1/scripts/auxiliary/learning/){target=_blank}  
   * A breakdown of deck selection over trials in a block. Looking for some basic evidence in favor of the idea that people might be faster to learn effort intensities that are harder (rather than easier) than the reference intensity.  
 
 ### Exploratory Analyses
-* [Exploratory Choice RT Analysis](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/exploratory/choicePerformance/){target=_blank}  
+* [Exploratory Choice RT Analysis](https://davebraun.net/dissertation/experiments/analysis/exp1/scripts/exploratory/choicePerformance/){target=_blank}  
   * Breaking down choice RTs by the 2 X 2 design.  
-* [Exploratory Performance Analysis](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/exploratory/performance/){target=_blank}    
-  * Analyzing performance data with linear vs. non-linear regressions.
+* [Exploratory Performance Analysis](https://davebraun.net/dissertation/experiments/analysis/exp1/scripts/exploratory/performance/){target=_blank}    
+  * Analyzing performance data with linear vs. non-linear regressions.  
+* [Exploratory Choice Switch Cost Analysis](https://davebraun.net/dissertation/experiments/analysis/exp1/scripts/exploratory/choice/){target=_blank}  
+  * An exploratory analysis of the interaction between the conditions and switch cost on choice.
+* [Exploratory Spline Model](https://davebraun.net/dissertation/experiments/analysis/exp1/scripts/exploratory/splineModel/){target=_blank}  
+  * Trying out a more parsimonious way of modeling the choice data.  
+    * [Exploratory Spline Model Final Fifty](https://davebraun.net/dissertation/experiments/analysis/exp1/scripts/exploratory/splineModel/finalFifty/){target=_blank}  
+      * Running the spline model only on the final half of trials in each block.
+  
+  
 
 ### Demographics Summary
-* [Demographics Summary](https://davebraun.org/dissertation/experiments/analysis/exp1/scripts/demo/){target=_blank}  
+* [Demographics Summary](https://davebraun.net/dissertation/experiments/analysis/exp1/scripts/demo/){target=_blank}  
   * A summary of the basic information collected in the survey at the end of the experiment.
 
 ## Experiment 2
 ### Preprocessing
-* [Preprocessing](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/preprocessing/){target=_blank}  
+* [Preprocessing](https://davebraun.net/dissertation/experiments/analysis/exp2/scripts/preprocessing/){target=_blank}  
   * The basic subject and RT-based trial trimming that was proposed in the document.  
 
 ### Confirmatory  
-* [Confirmatory Choice Analyses](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/confirmatory/choice/){target=_blank}  
+* [Confirmatory Choice Analyses](https://davebraun.net/dissertation/experiments/analysis/exp2/scripts/confirmatory/choice/){target=_blank}  
   * The core 2 (difficulty) X 2 (difference) ANOVA that was proposed in the document.  
-  * [Bayesian t-tests](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/confirmatory/bayes/){target=_blank}
+  * [Bayesian t-tests](https://davebraun.net/dissertation/experiments/analysis/exp2/scripts/confirmatory/bayes/){target=_blank}
     * Using Bayesian t-tests to investigate some of the null choice results.
-* [Confirmatory Performance Analyses](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/confirmatory/performance){target=_blank}
+* [Confirmatory Performance Analyses](https://davebraun.net/dissertation/experiments/analysis/exp2/scripts/confirmatory/performance){target=_blank}
 
 ### Auxiliary  
-* [Practice Cued Task Switching Analysis](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/auxiliary/pracCued/){target=_blank}  
+* [Practice Cued Task Switching Analysis](https://davebraun.net/dissertation/experiments/analysis/exp2/scripts/auxiliary/pracCued/){target=_blank}  
   * Testing for the switch cost for both RTs and error rates.
 
 ### Exploratory
-* [Exploratory Rapid Fire Choice Analysis](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/exploratory/rapidFire/){target=_blank}  
+* [Exploratory Rapid Fire Choice Analysis](https://davebraun.net/dissertation/experiments/analysis/exp2/scripts/exploratory/rapidFire/){target=_blank}  
   * Exploring the choice data from the rapid fire phase, and making subject-wise exclusions based on choice data from both DST and rapid fire.
-* [Exploratory Random Effects Analysis](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/exploratory/randomEffects/){target=_blank}
+* [Exploratory Random Effects Analysis](https://davebraun.net/dissertation/experiments/analysis/exp2/scripts/exploratory/randomEffects/){target=_blank}
   * Fitting generalized linear mixed models to the choice data in an effort to control for between-subject variance in the predicted effects.  
-* [Exploratory Choice Analysis](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/exploratory/choice/){target=_blank}  
+* [Exploratory Choice Analysis](https://davebraun.net/dissertation/experiments/analysis/exp2/scripts/exploratory/choice/){target=_blank}  
   * Trying to break down the subject data by trial in the experiment. It seems like selection strategies didn't change much over time.  
-* [Exploratory Performance Analysis](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/exploratory/performance/){target=_blank}  
+* [Exploratory Performance Analysis](https://davebraun.net/dissertation/experiments/analysis/exp2/scripts/exploratory/performance/){target=_blank}  
   * Analyzing to see whether performance depends on the difficulty variable. RTs for reference are faster for easier than reference conditions relative to harder conditions.  
-* [Exploratory Choice RT Analysis](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/exploratory/choicePerformance/){target=_blank}  
+* [Exploratory Choice RT Analysis](https://davebraun.net/dissertation/experiments/analysis/exp2/scripts/exploratory/choicePerformance/){target=_blank}  
   * Breaking down choice RTs by the 2 X 2 design.  
 
 ### Demographics Summary
-* [Demographics Summary](https://davebraun.org/dissertation/experiments/analysis/exp2/scripts/demo/){target=_blank}  
+* [Demographics Summary](https://davebraun.net/dissertation/experiments/analysis/exp2/scripts/demo/){target=_blank}  
   * A summary of the basic information collected in the survey at the end of the experiment.
 
 ## Experiment 3
 
 ### Pilot
-* [Pilot](https://davebraun.org/dissertation/experiments/production/pilots/exp3Pilot/analysis/scripts/demo/){target=_blank}  
+* [Pilot](https://davebraun.net/dissertation/experiments/production/pilots/exp3Pilot/analysis/scripts/demo/){target=_blank}  
   * A 25-participant pilot was conducted to assess the clarity of the instructions and manipulations.
 
 ### Preprocessing  
-* [Preprocessing](https://davebraun.org/dissertation/experiments/analysis/exp3/scripts/preprocessing/){target=_blank}  
+* [Preprocessing](https://davebraun.net/dissertation/experiments/analysis/exp3/scripts/preprocessing/){target=_blank}  
   * The basic subject and RT-based trial trimming that was proposed in the document.  
 
 ### Confirmatory
-* [Confirmatory Choice Analyses](https://davebraun.org/dissertation/experiments/analysis/exp3/scripts/confirmatory/choice/){target=_blank}  
+* [Confirmatory Choice Analyses](https://davebraun.net/dissertation/experiments/analysis/exp3/scripts/confirmatory/choice/){target=_blank}  
   * The core 2 (difficulty) X 2 (difference) ANOVA that was proposed in the document.  
-* [Confirmatory Performance Analyses](https://davebraun.org/dissertation/experiments/analysis/exp3/scripts/confirmatory/performance){target=_blank}
+* [Confirmatory Performance Analyses](https://davebraun.net/dissertation/experiments/analysis/exp3/scripts/confirmatory/performance){target=_blank}
 
 ### Auxiliary  
-* [Practice Cued Task Switching Analysis](https://davebraun.org/dissertation/experiments/analysis/exp3/scripts/auxiliary/pracCued/){target=_blank}  
+* [Practice Cued Task Switching Analysis](https://davebraun.net/dissertation/experiments/analysis/exp3/scripts/auxiliary/pracCued/){target=_blank}  
   * Testing for the switch cost for both RTs and error rates.
 
+
 ### Exploratory
-* [Exploratory Rapid Fire Choice Analysis](https://davebraun.org/dissertation/experiments/analysis/exp3/scripts/exploratory/rapidFire/){target=_blank}  
+* [Exploratory Rapid Fire Choice Analysis](https://davebraun.net/dissertation/experiments/analysis/exp3/scripts/exploratory/rapidFire/){target=_blank}  
   * Exploring the choice data from the rapid fire phase, and making subject-wise exclusions based on choice data from both DST and rapid fire.  
-* [Exploratory Performance Analysis](https://davebraun.org/dissertation/experiments/analysis/exp3/scripts/exploratory/performance/){target=_blank}  
+* [Exploratory Performance Analysis](https://davebraun.net/dissertation/experiments/analysis/exp3/scripts/exploratory/performance/){target=_blank}  
   * Analyzing to see whether performance depends on the difficulty variable. RTs for reference are faster for easier than reference conditions relative to harder conditions. 
-* [Exploratory Random Effects Analysis](https://davebraun.org/dissertation/experiments/analysis/exp3/scripts/exploratory/randomEffects/){target=_blank}
+* [Exploratory Random Effects Analysis](https://davebraun.net/dissertation/experiments/analysis/exp3/scripts/exploratory/randomEffects/){target=_blank}
   * Fitting generalized linear mixed models to the choice data in an effort to control for between-subject variance in the predicted effects.     
-* [Exploratory Choice RT Analysis](https://davebraun.org/dissertation/experiments/analysis/exp3/scripts/exploratory/choicePerformance/){target=_blank}  
-  * Breaking down choice RTs by the 2 X 2 design.
+* [Exploratory Choice RT Analysis](https://davebraun.net/dissertation/experiments/analysis/exp3/scripts/exploratory/choicePerformance/){target=_blank}  
+  * Breaking down choice RTs by the 2 X 2 design.  
+* [Choice and Learning](https://davebraun.net/dissertation/experiments/analysis/exp3/scripts/exploratory/time/){target=_blank}  
+  * Analyzing whether the main effect of direction interacts with time to influence choice.  
+* [Risk and Flexibility](https://davebraun.net/dissertation/experiments/analysis/exp3/scripts/exploratory/flexibility-risk/){target=_blank}  
+  * Analyzing whether control mode (stability vs. flexibility) influences preference for risk.
 
 ### Demographics Summary
-* [Demographics Summary](https://davebraun.org/dissertation/experiments/analysis/exp3/scripts/demo/){target=_blank}  
+* [Demographics Summary](https://davebraun.net/dissertation/experiments/analysis/exp3/scripts/demo/){target=_blank}  
   * A summary of the basic information collected in the survey at the end of the experiment.
 
+## Experiment 3 Pypool
 
+
+### Preprocessing  
+* [Preprocessing](https://davebraun.net/dissertation/experiments/analysis/exp3-pypool/scripts/preprocessing/){target=_blank}  
+  * The basic subject and RT-based trial trimming that was proposed in the document.  
+
+### Confirmatory
+* [Confirmatory Choice Analyses](https://davebraun.net/dissertation/experiments/analysis/exp3-pypool/scripts/confirmatory/choice/){target=_blank}  
+  * The core 2 (difficulty) X 2 (difference) ANOVA that was proposed in the document.  
+* [Confirmatory Performance Analyses](https://davebraun.net/dissertation/experiments/analysis/exp3-pypool/scripts/confirmatory/performance){target=_blank}
+
+### Auxiliary  
+* [Practice Cued Task Switching Analysis](https://davebraun.net/dissertation/experiments/analysis/exp3-pypool/scripts/auxiliary/pracCued/){target=_blank}  
+  * Testing for the switch cost for both RTs and error rates.  
+
+### Exploratory
+* [Exploratory Rapid Fire Choice Analysis](https://davebraun.net/dissertation/experiments/analysis/exp3-pypool/scripts/exploratory/rapidFire/){target=_blank}  
+  * Exploring the choice data from the rapid fire phase, and making subject-wise exclusions based on choice data from both DST and rapid fire.   
+* [Choice and Learning](https://davebraun.net/dissertation/experiments/analysis/exp3-pypool/scripts/exploratory/time/){target=_blank}  
+  * Analyzing whether the main effect of direction interacts with time to influence choice.
+* [Risk and Flexibility](https://davebraun.net/dissertation/experiments/analysis/exp3-pypool/scripts/exploratory/flexibility-risk/){target=_blank}  
+  * Analyzing whether control mode (stability vs. flexibility) influences preference for risk.
+
+### Demographics Summary
+* [Demographics Summary](https://davebraun.net/dissertation/experiments/analysis/exp3-pypool/scripts/demo/){target=_blank}  
+  * A summary of the basic information collected in the survey at the end of the experiment.
 
 
 

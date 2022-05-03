@@ -1,0 +1,93 @@
+---
+title: "`r paste('Experiment', ifelse(stringr::str_detect(getwd(), 'exp3'), 3, 2), 'Exploratory Performance Analyses')`"
+author: "Dave Braun"
+date: "7/21/2019"
+output: 
+  html_document:
+    code_folding: hide
+    df_print: paged
+    includes:
+      after_body: ../../../../footer.html
+      in_header: ../../../../favicon.html
+knit:
+  (function(inputFile, encoding) {
+      rmarkdown::render(inputFile,
+                    encoding = encoding,
+                    output_file = 'index.html')})
+---
+```{r include = FALSE}
+library(tidyverse)
+library(ez)
+```
+
+*This document was last updated at `r Sys.time()`.*
+
+This document is dedicated to investigating a post-hoc hypothesis for the Experiment `r ifelse(stringr::str_detect(getwd(), 'exp3'), 3, 2)` choice RT data. I didn't make any a priori predictions as to what these data would look like, but the idea is that I'll break down choice RTs by the main design and see what we get. I'm using the rapid fire trimming procedure data for everything. This includes the basic 10 s trim on chocie RTs, which I think is good enough for these purposes. In a sense what I'm doing here is just analyzing the exact trials that went in to the choice analysis. The point of these data is really just to get insight into choice, I don't really care about choice RTs per se.
+
+```{r}
+d <- read.csv('../../../data/dstCleanChoice2.csv')
+N <- d %>% 
+  group_by(subject) %>% 
+  summarize(n()) %>% 
+  nrow()
+head(d)
+d$difference <- factor(d$difference, levels = levels(d$difference)[c(2,1)])
+```
+
+**The sample size is `r N`.**
+
+```{r}
+cellMeans <- d %>% 
+  group_by(subject, difference, difficulty) %>% 
+  summarize(choiceRt = mean(choiceRt)) %>% 
+  group_by(difference, difficulty) %>% 
+  summarize(rt = mean(choiceRt), se = sd(choiceRt) / sqrt(N))
+cellMeans
+
+pd <- position_dodge(width=.9)
+
+cellMeans %>% 
+  ggplot(aes(x = difficulty, y = rt, group = difference)) +
+  geom_bar(stat = 'identity', aes(fill = difference), position = pd) +
+  geom_errorbar(aes(ymin = rt - se, ymax = rt + se), position = pd, width = 0.5) +
+  ylim(0,2500) +
+  scale_fill_manual(name = 'Difference', values = c(Extreme = 'black', Moderate = 'Light grey')) +
+  labs(
+    x = 'Difficulty',
+    y = 'Choice Response Time (ms)'
+  ) +
+  theme_bw()
+```
+
+
+## Statistics
+
+```{r}
+m1 <- ezANOVA(wid = subject, within = .(difference, difficulty), dv = choiceRt, detailed = TRUE, data = d)
+m1 <- m1$ANOVA
+m1$p <- round(m1$p, 3)
+m1$n2p <- m1$SSn / (m1$SSn + m1$SSd)
+m1
+```
+
+### Main effect of difficulty
+```{r}
+d %>% 
+  group_by(subject, difficulty) %>% 
+  summarize(choiceRt = mean(choiceRt)) %>% 
+  group_by(difficulty) %>% 
+  summarize(rt = mean(choiceRt), se = sd(choiceRt) / sqrt(N))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+

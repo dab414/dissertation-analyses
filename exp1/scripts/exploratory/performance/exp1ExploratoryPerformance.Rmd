@@ -17,6 +17,7 @@ knit:
 ---
 ```{r include = FALSE}
 library(tidyverse)
+library(investr)
 ```
 
 
@@ -71,7 +72,6 @@ d %>%
 ```
 
 
-
 ## Build the models
 
 ```{r}
@@ -79,47 +79,59 @@ d$chosenDeckIdEI <- as.double(as.character(d$chosenDeckIdEI))
 
 m1 <- lm(cuedRt ~ chosenDeckIdEI, data = d)
 newdata <- data.frame(chosenDeckIdEI = seq(0.1,0.9, .001))
-newdata$linear <- m1$coefficients[1] + m1$coefficients[2] * newdata$chosenDeckIdEI
+#newdata$linear <- m1$coefficients[1] + m1$coefficients[2] * newdata$chosenDeckIdEI
+newdata <- cbind(newdata, predict(m1, newdata, interval = 'predict'))
+
 sm <- d %>% 
   group_by(subject, chosenDeckIdEI) %>% 
   summarize(cuedRt = mean(cuedRt))
+
 m2 <- nls(cuedRt ~ a * I(chosenDeckIdEI^b), data = d, start = list(a = 1000, b = 1), trace=T)
-newdata$powerfun <- m2$m$getPars()['a'] * newdata$chosenDeckIdEI^m2$m$getPars()['b']
+#newdata$powerfun <- m2$m$getPars()['a'] * newdata$chosenDeckIdEI^m2$m$getPars()['b']
+newdata <- cbind(newdata, predFit(m2, newdata = newdata, interval = 'prediction'))
+colnames(newdata) <- c('chosenDeckIdEI','lfit','llwr','lupr','pfit','plwr','pupr')
 
 newdata <- newdata %>% 
-  gather(model, proba, linear, powerfun)
+  gather(model, stat, lfit:pupr) %>% 
+  separate(model, into = c('model', 'parameter'), sep = 1) %>% 
+  spread(parameter, stat)
 
 ```
 
 ```{r}
 cm$chosenDeckIdEI <- as.numeric(as.character(cm$chosenDeckIdEI))
+
 d %>% 
   group_by(subject, chosenDeckIdEI) %>% 
   summarize(rt = mean(cuedRt)) %>% 
   ggplot(aes(x = chosenDeckIdEI, y = rt)) +
+  geom_ribbon(data = newdata, aes(x = chosenDeckIdEI, y = fit, fill = model, ymin = lwr, ymax = upr), alpha = .1, show.legend = FALSE) +
   geom_jitter(height = 0, alpha = .3, width = 0.01) + 
   geom_line(data = cm, aes(x = chosenDeckIdEI, y = rt, group = 1)) +
   geom_point(data = cm, aes(x = chosenDeckIdEI, y = rt), size = 2) +
   geom_errorbar(data = cm, aes(ymin = rt - se, ymax = rt + se), width = .05) + 
-  geom_line(data = newdata, aes(x = chosenDeckIdEI, y = proba, color = model, group = model), size = 1.5, linetype = 'dashed') +
+  geom_line(data = newdata, aes(x = chosenDeckIdEI, y = fit, color = model, group = model), size = 2, linetype = 'dashed') +
   scale_x_continuous(breaks = seq(.1,.9,.2), labels = seq(.1,.9,.2)) + 
-  scale_color_discrete(name = 'Model', labels = c(linear = 'Linear', powerfun = 'Power')) + 
+  scale_color_discrete(name = 'Model', labels = c(l = 'Linear', p = 'Power')) + 
   labs(
     x = 'Chosen Deck Probability of Switching',
-    y = 'Response Time (ms)'
+    y = 'Response Time (ms)',
+    caption = 'Color bands represent 95% prediction intervals around model predictions.'
   ) + 
   theme_bw() + 
-  theme(legend.position = c(.1,.8))
+  theme(legend.position = c(.1,.85))
 ```
 
 **Model comparison**  
 Linear:
 ```{r}
 summary(m1)
+confint(m1)
 ```
 Power:
 ```{r}
 summary(m2)
+confint(m2)
 ```
 
 

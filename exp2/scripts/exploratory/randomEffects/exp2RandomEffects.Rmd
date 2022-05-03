@@ -219,7 +219,7 @@ anova(m1_noCov, m1_mainEffects)
 The covariances aren't significant either. Stepping down again.
 
 ```{r}
-m1_noDiff <- glmer(selSafeDeck ~ differenceE * difficultyE + (1| subject) + (0 + differenceE) , data = d, family = binomial, control = glmerControl(optimizer = 'bobyqa'))
+m1_noDiff <- glmer(selSafeDeck ~ differenceE * difficultyE + (1| subject) + (0 + differenceE | subject) , data = d, family = binomial, control = glmerControl(optimizer = 'bobyqa'))
 AICtab(m1_noCov, m1_noDiff, nobs = nrow(d))
 anova(m1_noCov, m1_noDiff)
 ```

@@ -1,0 +1,169 @@
+---
+title: "Control Mode and Risk Preference Exp 3 Pypool"
+author: "Dave Braun"
+date: "1/5/2022"
+output: 
+  html_document:
+    code_folding: hide
+    df_print: paged
+    includes:
+      after_body: ../../../../footer.html
+      in_header: ../../../../favicon.html
+knit:
+  (function(inputFile, encoding) {
+      rmarkdown::render(inputFile,
+                    encoding = encoding,
+                    output_file = 'index.html')})
+---
+
+*This document was last updated at `r Sys.time()`.*
+
+This document is dedicated to investigating the hypothesis that mode of control (flexible vs. stable) might influence risk preference. In operational terms, does how many switches were performed on the previous trial influence preference for safe vs. risky deck?
+
+```{r}
+library(tidyverse)
+library(data.table)
+library(ez)
+
+d <- read.csv('../../../data/dstClean.csv')
+
+head(d)
+
+N <- length(unique(d$subject))
+
+```
+
+
+```{r}
+s <- d %>% 
+  group_by(subject, choiceTrial) %>% 
+  summarize(difficulty = unique(difficulty), outcomeSwitch = unique(outcomeSwitch), selectedRiskyDeck = unique(selectedRiskyDeck), condition = unique(condition)) %>% 
+  mutate(outcomeSwitch = as.numeric(outcomeSwitch),
+    outcome_switch_lag = ifelse(subject == shift(subject), shift(outcomeSwitch), NA)) 
+
+s %>% 
+  filter(!is.na(outcome_switch_lag)) %>% 
+  mutate(ssd = 1 - selectedRiskyDeck) %>% 
+  group_by(subject, difficulty, outcome_switch_lag) %>% 
+  summarize(ssd_ = mean(ssd)) %>% 
+  group_by(difficulty, outcome_switch_lag) %>% 
+  summarize(ssd = mean(ssd_), se = sd(ssd_) / sqrt(N)) %>% 
+  ggplot(aes(x = factor(outcome_switch_lag), y = ssd)) + 
+  geom_hline(yintercept = .5, linetype = 'dashed') + 
+  geom_bar(stat = 'identity', aes(fill = difficulty), position = position_dodge(width = .9)) + 
+  geom_errorbar(aes(ymin = ssd - se, ymax = ssd + se, group = difficulty), position = position_dodge(width = .9), width = .5) + 
+  ylim(0,1) + 
+  labs(
+    x = 'Switches Performed on Previous Trial',
+    y = 'Proportion Selection of Safe Deck',
+    fill = 'Direction'
+  ) + 
+  theme_bw() + 
+  theme(legend.position = c(.2,.85))
+  
+ggsave('exp3-pypool_flex-risk.pdf', height = 5.5, width = 7.5)
+```
+
+
+
+```{r}
+anova_data <- s %>% 
+  filter(!is.na(outcome_switch_lag)) %>% 
+  mutate(ssd = 1 - selectedRiskyDeck) %>% 
+  group_by(subject, difficulty, outcome_switch_lag) %>% 
+  summarize(ssd = mean(ssd))
+
+anova_data %>% 
+  group_by(subject) %>% 
+  summarize(count = n()) %>% 
+  ggplot(aes(x = count)) +
+  geom_histogram()
+  
+  
+
+
+#m1 <- ezANOVA(wid = subject, dv = ssd, within = .(difficulty, outcome_switch_lag), data = anova_data, detailed = TRUE)
+```
+
+Not enough complete cells to look at this one statistically. I can bin number of switches to try to get at it statistically.
+
+```{r}
+anova_data <- s %>% 
+  mutate(condition_lag = ifelse(outcome_switch_lag < 5, 'low', ifelse(outcome_switch_lag > 10, 'high', 'medium')),
+         condition_lag = factor(condition_lag, levels = c('low', 'medium', 'high')),
+         ssd = 1 - selectedRiskyDeck) %>% 
+  filter(!is.na(condition_lag)) %>% 
+  group_by(subject, difficulty, condition_lag) %>% 
+  summarize(ssd = mean(ssd)) 
+
+anova_data$condition_lag <- factor(anova_data$condition_lag, levels = c('low', 'medium', 'high'))
+
+anova_data %>% 
+  group_by(subject) %>% 
+  summarize(count = n()) %>% 
+  ggplot(aes(x = count)) + 
+  geom_histogram()
+
+bad_subjects <- anova_data %>% 
+  group_by(subject) %>% 
+  summarize(count = n()) %>% 
+  filter(count != max(count)) %>% 
+  select(subject)
+bad_subjects <- bad_subjects$subject
+
+anova_data <- anova_data[!(anova_data$subject %in% bad_subjects),]
+
+anova_data %>% 
+  group_by(difficulty, condition_lag) %>% 
+  summarize(ssd_ = mean(ssd), se = sd(ssd) / sqrt(N)) %>% 
+  ggplot(aes(x = condition_lag, y = ssd_)) + 
+  geom_hline(yintercept = .5, linetype = 'dashed') + 
+  geom_bar(stat = 'identity', aes(fill = difficulty), position = position_dodge(width = .9)) + 
+  geom_errorbar(aes(ymin = ssd_ - se, ymax = ssd_ + se, group = difficulty), position = position_dodge(width = .9), width = .5) + 
+  ylim(0, 1) + 
+  labs(
+    x = 'Number of Switches Performed on Previous Trial',
+    y = 'Proportion Selection of Safe Deck',
+    fill = 'Difficulty',
+    caption = 'The interaction is significant, p = .02'
+  ) + 
+  theme_bw() + 
+  theme(legend.position = c(.15,.85))
+
+  
+  
+```
+
+
+
+```{r}
+m1 <- ezANOVA(wid = subject, dv = ssd, within = .(difficulty, condition_lag), detailed = TRUE, data = anova_data)
+m1
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
