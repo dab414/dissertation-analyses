@@ -83,6 +83,7 @@ d$transitionE <- ifelse(d$transition == 'repeat', -0.5, 0.5)
 m1 <- lm(cuedRt ~ transitionE * outcomeSwitchC, data = d)
 plot(m1)
 summary(m1)
+confint(m1)
 ```
 
 
@@ -118,6 +119,7 @@ d$outcomeSwitchC <- d$outcomeSwitch - 12
 d$transitionE <- ifelse(d$transition == 'repeat', -0.5, 0.5)
 m1 <- lm(cuedRt ~ transitionE * outcomeSwitchC, data = d)
 summary(m1)
+confint(m1)
 ```
 
 And centering at low number of switches per run (4)
@@ -127,6 +129,7 @@ d$outcomeSwitchC <- d$outcomeSwitch - 4
 d$transitionE <- ifelse(d$transition == 'repeat', -0.5, 0.5)
 m1 <- lm(cuedRt ~ transitionE * outcomeSwitchC, data = d)
 summary(m1)
+confint(m1)
 ```
 
 
@@ -212,6 +215,7 @@ d$transitionE <- ifelse(d$transition == 'repeat', -0.5, 0.5)
 m1 <- lm(error ~ transitionE * outcomeSwitchC, data = d)
 plot(m1)
 summary(m1)
+confint(m1)
 ```
 
 
@@ -248,6 +252,7 @@ m2 <- lm(error ~ outcomeSwitch, data = d)
 slope <- round(m2$coefficients[2], 5)
 
 summary(m2)
+confint(m2)
 
 sMeans <- d %>% 
   group_by(subject, outcomeSwitch) %>% 

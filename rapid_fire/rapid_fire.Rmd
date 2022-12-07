@@ -1,0 +1,194 @@
+---
+title: "Cross Experiment Rapid Fire Analyses"
+author: "Dave Braun"
+date: "5/18/2022"
+output: 
+  html_document:
+    code_folding: hide
+    df_print: paged
+
+knit:
+  (function(inputFile, encoding) {
+      rmarkdown::render(inputFile,
+                    encoding = encoding,
+                    output_file = 'index.html')})
+---
+```{r include=FALSE}
+library(tidyverse)
+library(ez)
+library(data.table)
+
+e2adst <- read.csv('../exp3/data/dstCleanChoice1.csv')
+e2bdst <- read.csv('../exp3-pypool/data/dstCleanChoice1.csv')
+e2arf <- read.csv('../exp3/data/rapidFire.csv')
+e2brf <- read.csv('../exp3-pypool/data/rapidFire.csv')
+
+e2bdst <- e2bdst[e2bdst$corrected_effort_units == 'false',]
+e2brf <- e2brf[e2brf$corrected_effort_units == 'false',]
+```
+
+This document explores the rapid fire data across Experiments 2A and 2B. 
+
+I will trim the data separately for E2A and E2B according to:  
+* Drop subjects who have average choice RTs < 200 ms  
+* Drop subjects who are beyond +2 SDs on group means of location bias
+
+
+```{r}
+## drop for choice rts
+e2abadsubjects <- e2arf %>% 
+  group_by(subject) %>% 
+  summarize(choiceRt = mean(choiceRt)) %>% 
+  filter(choiceRt < 200)
+
+e2bbadsubjects <- e2brf %>% 
+  group_by(subject) %>% 
+  summarize(choiceRt = mean(choiceRt)) %>% 
+  filter(choiceRt < 200)
+
+e2arf <- e2arf[!e2arf$subject %in% e2abadsubjects,]
+e2brf <- e2brf[!e2brf$subject %in% e2abadsubjects,]
+```
+
+For trimming people who selected decks on average in less than 200 ms, there were `r nrow(e2abadsubjects)` in E2A and `r nrow(e2bbadsubjects)` in E2B.
+
+```{r}
+## drop for location bias
+
+e2arf$experiment <- 'e2a'
+e2brf$experiment <- 'e2b'
+keep <- c('subject', 'experiment', 'selectedDeckLocation')
+rf <- rbind(e2arf[,keep], e2brf[,keep])
+
+p_data <- rf %>% 
+  mutate(location_numeric = ifelse(selectedDeckLocation == 'left', -1, 1)) %>% 
+  group_by(subject, experiment) %>% 
+  summarize(location_numeric = abs(mean(location_numeric)))
+
+means <- p_data %>% 
+  group_by(experiment) %>% 
+  summarize(m = mean(location_numeric), std = sd(location_numeric)) %>% 
+  mutate(threshold = m + 2*std) %>% 
+  select(-m, -std)
+
+p_data %>% 
+  ggplot(aes(x = reorder(subject, location_numeric), y = location_numeric)) +
+  geom_point() + 
+  labs(
+    x = 'Subject',
+    y = 'Location Bias'
+  ) +
+  coord_flip() + 
+  facet_wrap(~experiment) + 
+  geom_hline(data = means, aes(yintercept = threshold), linetype = 'dashed') +
+  theme_bw() + 
+  theme(axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        strip.background = element_rect(color = 'black', fill = 'white')) 
+  
+  
+```
+
+
+```{r}
+bad_subjects <- p_data %>% 
+  inner_join(means) %>% 
+  filter(location_numeric > threshold) %>% 
+  select(subject, experiment)
+bad_subjects
+
+e2arf <- e2arf[!e2arf$subject %in% bad_subjects[bad_subjects$experiment=='e2a',]$subject,]
+e2brf <- e2brf[!e2brf$subject %in% bad_subjects[bad_subjects$experiment=='e2b',]$subject,]
+```
+
+For location bias, there were `r nrow(bad_subjects[bad_subjects$experiment == 'e2a',])` subjects beyond the +2 SD threshold in E2A, and there were `r nrow(bad_subjects[bad_subjects$experiment == 'e2b',])` such subjects in E2B.
+
+This left `r length(unique(e2arf$subject))` subjects in E2A, and `r length(unique(e2brf$subject))` subjects in E2B.
+
+## Statistical tests
+
+```{r}
+## unconditional risk preference means 
+e2adst <- e2adst %>% 
+  group_by(subject) %>% 
+  summarize(ssd = 1 - mean(selectedRiskyDeck)) %>% 
+  filter(subject %in% e2arf$subject)
+
+e2bdst <- e2bdst %>% 
+  group_by(subject) %>% 
+  summarize(ssd = 1 - mean(selectedRiskyDeck)) %>% 
+  filter(subject %in% e2brf$subject)
+
+
+## t tests on rf data
+
+e2arfmeans <- e2arf %>% 
+  group_by(subject, difficulty) %>% 
+  summarize(ssd = 1 - mean(selectedRiskyDeck))
+
+print('E2A RF means')
+
+e2arfmeans %>% 
+  group_by(difficulty) %>% 
+  summarize(mean_ssd = mean(ssd), se = sd(ssd) / sqrt(nrow(e2arfmeans)))
+
+print('E2A RF ttest')
+
+v1 <- e2arfmeans[e2arfmeans$difficulty=='Easier than Reference',]$ssd
+v2 <- e2arfmeans[e2arfmeans$difficulty=='Harder than Reference',]$ssd
+t.test(v1, v2, paired = TRUE)
+
+e2brfmeans <- e2brf %>% 
+  group_by(subject, difficulty) %>% 
+  summarize(ssd = 1 - mean(selectedRiskyDeck))
+
+print('E2B RF means')
+
+e2brfmeans %>% 
+  group_by(difficulty) %>% 
+  summarize(mean_ssd = mean(ssd), se = sd(ssd) / sqrt(nrow(e2arfmeans)))
+
+print('E2B RF ttest')
+
+v1 <- e2brfmeans[e2brfmeans$difficulty=='Easier than Reference',]$ssd
+v2 <- e2brfmeans[e2brfmeans$difficulty=='Harder than Reference',]$ssd
+t.test(v1, v2, paired = TRUE)
+
+
+```
+
+
+```{r}
+## correlations
+e2a <- e2arfmeans %>% 
+  inner_join(e2adst, by = 'subject')
+cor.test(e2a$ssd.x, e2a$ssd.y)
+
+e2b <- e2brfmeans %>% 
+  inner_join(e2bdst, by = 'subject')
+cor.test(e2b$ssd.x, e2b$ssd.y)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

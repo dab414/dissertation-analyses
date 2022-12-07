@@ -19,6 +19,7 @@ knit:
 library(tidyverse)
 library(ggExtra)
 library(ez)
+library(latex2exp)
 source('../../formatSimpleEffects.r')
 ```
 
@@ -61,7 +62,7 @@ I'll first visualize the results broken down across the whole design, followed b
 
 ```{r}
 dst <- dst %>% 
-  mutate(difference = factor(difference, levels = levels(difference)[c(2,1)]),
+  mutate(difference = factor(difference, levels = levels(factor(difference))[c(2,1)]),
          selSafeDeck = ifelse(selectedRiskyDeck == 1, 0, 1))
 ```
 
@@ -74,18 +75,28 @@ dst %>%
   summarize(ssd = mean(selSafeDeck), se = sd(selSafeDeck) / sqrt(n)) %>% 
   print() %>% 
   ggplot(aes(x = difficulty, y = ssd, group = difference)) +
+  geom_hline(yintercept = 0.5, linetype = 'dashed') +
   geom_bar(stat = 'identity', aes(fill = difference), color = 'black', position = position_dodge(width = 0.9)) + 
   geom_errorbar(aes(ymin = ssd - se, ymax = ssd + se), position = position_dodge(width = 0.9), width = 0.5) +
   labs(
     x = 'Difficulty',
-    y = 'Proportion Selection of Safe Deck',
-    caption = 'Dashed line represents selecting at chance'
+    y = 'Mean Proportion Choose Safe Deck',
+    caption = TeX(r'($N = 131$; Difficulty: $F(1, 118) = 44.58, p < .001, \eta_p^2 = .274)')
   ) +
   ylim(0, 1) +
-  geom_hline(yintercept = 0.5, linetype = 'dashed') +
-  scale_fill_manual(name = 'Difference', values = c(Moderate = 'light grey', Extreme = 'black')) +
-  theme_bw()
+  scale_fill_manual(name = 'Difference', values = c(Moderate = 'dark grey', Extreme = 'white')) +
+  theme_bw() + 
+  theme(axis.ticks = element_blank(),
+        panel.grid = element_blank(),
+        legend.position = c(.8, .8),
+        text = element_text(size = 16),
+        plot.caption = element_text(size = 12))
 ```
+```{r}
+ggsave('difficulty_effect_ppt.pdf', height = 768 / 96, width = 1024 / 96, units = 'in', dpi = 96)
+```
+
+
 
 Main effect of difficulty:
 
@@ -172,12 +183,19 @@ dst %>%
   ylim(0,1) + 
   theme_bw() +
   labs(
-    title = 'Selection of safe deck by difficulty and subject',
     x = 'Difficulty',
-    y = 'Proportion Selection of Safe Deck',
-    caption = 'Red diamond reflects condition means. Horizontal, black, solid lines reflect medians.'
+    y = 'Proportion Choose Safe Deck',
+    caption = 'Red diamonds reflect condition means. Horizontal, black, solid lines reflect medians.'
   ) +
-  theme(legend.position = 'bottom')
+  theme(legend.position = 'bottom',
+        axis.ticks = element_blank(),
+        panel.grid = element_blank(),
+        text = element_text(size = 16),
+        plot.caption = element_text(size = 12))
+```
+
+```{r}
+ggsave('difficulty_effect_id_ppt.png', height = 768 / 96, width = 1024 / 96, units = 'in', dpi = 96)
 ```
 
 
@@ -292,7 +310,7 @@ I'll first visualize the results broken down across the whole design, followed b
 ```{r}
 dst <- read.csv('../../../data/dstCleanChoice1.csv')
 dst <- dst %>% 
-  mutate(difference = factor(difference, levels = levels(difference)[c(2,1)]),
+  mutate(difference = factor(difference, levels = levels(factor(difference))[c(2,1)]),
          selSafeDeck = ifelse(selectedRiskyDeck == 1, 0, 1))
 ```
 
@@ -524,7 +542,7 @@ I'll first visualize the results broken down across the whole design, followed b
 ```{r}
 dst <- read.csv('../../../data/dstCleanChoice2.csv')
 dst <- dst %>% 
-  mutate(difference = factor(difference, levels = levels(difference)[c(2,1)]),
+  mutate(difference = factor(difference, levels = levels(factor(difference))[c(2,1)]),
          selSafeDeck = ifelse(selectedRiskyDeck == 1, 0, 1))
 ```
 

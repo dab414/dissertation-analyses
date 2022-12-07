@@ -41,7 +41,14 @@ n <- nrow(demo)
 head(pracCued)
 ```
 
+```{r}
+N_analyzed <- length(unique(dst[dst$corrected_effort_units=='false',]$subject))
+```
+
+
 **The initial sample size is `r n`.**
+
+**The initial sample size for only those in the uncorrected condition (which is what is being reported as E2B in the ms) is `r N_analyzed`.**
 
 ## Run time
 For piloting purposes, I'm curious as to how long the experiment is running.  

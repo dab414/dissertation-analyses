@@ -20,7 +20,7 @@ knit:
 library(tidyverse)
 library(data.table)
 library(lme4)
-library(bbmle)
+#library(bbmle)
 library(car)
 library(gridExtra)
 ```
@@ -206,7 +206,7 @@ I'm going to jump right to dropping the random interaction and compare AICs
 
 ```{r}
 m1_mainEffects <- glmer(selSafeDeck ~ differenceE * difficultyE + (1 + difficultyE + differenceE | subject), data = d, family = binomial, control = glmerControl(optimizer = 'bobyqa'))
-AICtab(m1_maximal, m1_mainEffects, nobs = nrow(d))
+#AICtab(m1_maximal, m1_mainEffects, nobs = nrow(d))
 anova(m1_mainEffects, m1_maximal)
 ```
 
@@ -214,7 +214,7 @@ The maximal model fails the AIC test against the simpler, main effects model. Ta
 
 ```{r}
 m1_noCov <- glmer(selSafeDeck ~ differenceE * difficultyE + (1| subject) + (0 + difficultyE | subject) + (0 + differenceE | subject) , data = d, family = binomial, control = glmerControl(optimizer = 'bobyqa'))
-AICtab(m1_noCov, m1_mainEffects, nobs = nrow(d))
+#AICtab(m1_noCov, m1_mainEffects, nobs = nrow(d))
 anova(m1_noCov, m1_mainEffects)
 ```
 
@@ -222,7 +222,7 @@ The covariances aren't significant either. Stepping down again.
 
 ```{r}
 m1_noDiff <- glmer(selSafeDeck ~ differenceE * difficultyE + (1| subject) + (0 + differenceE | subject) , data = d, family = binomial, control = glmerControl(optimizer = 'bobyqa'))
-AICtab(m1_noCov, m1_noDiff, nobs = nrow(d))
+#AICtab(m1_noCov, m1_noDiff, nobs = nrow(d))
 anova(m1_noCov, m1_noDiff)
 ```
 
@@ -401,6 +401,7 @@ difficultyPrint
 
 CIs %>% 
   ggplot(aes(x = factor, y = estimate)) +
+  geom_hline(yintercept = 0, linetype = 'dotted') +
   geom_errorbar(aes(ymin = lower, ymax = upper, color = method), position = position_dodge(width = .5), width = 0) +
   geom_point(aes(color = method), position = position_dodge(width = .5)) +
   coord_flip()+
@@ -418,7 +419,7 @@ CIs %>%
 
 A quick note about variable coding. Here, the reference for Difficulty is 'Easier than Reference' and the reference for Difference is 'Moderate'. So the effects can be interpreted as the change in log odds of selecting the safe deck when going from easier than reference to harder than reference, for example.  
 
-I notice that the critical effect (i.e., main effect of difficulty) still has zero within its 95% confidence band. Although we haven't looked at p-values yet, this might suggest that the difficulty variable did not have a significant impact on preference for the safe deck. This main effect of difference seems more reliable, however, and it suggests that people become more risk seeking as the difference in effort intensity becomes more extreme. 
+I notice that confidence intervals of the critical effect (i.e., main effect of difficulty) is well outside the null hypothesis (ie, 0).
 
 
 ## Hypothesis testing

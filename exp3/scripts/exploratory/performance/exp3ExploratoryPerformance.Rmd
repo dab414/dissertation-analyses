@@ -37,6 +37,7 @@ head(d)
 
 ```{r}
 scm <- d %>% 
+  filter(outcomeSwitch == 8) %>% 
   group_by(subject, difficulty) %>% 
   summarize(cuedRt = mean(cuedRt))
 

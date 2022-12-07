@@ -22,6 +22,7 @@ This document is dedicated to looking at the central impact of framing on choice
 
 ```{r}
 library(tidyverse)
+library(ggsci)
 
 d <- read.csv('../../../data/dstCleanChoice1.csv')
 
@@ -52,7 +53,8 @@ print(paste0(round((aligned_count / N) * 100, 2), '% of subjects are aligned wit
 ```{r}
 
 ## look at stuff over time ##
-whole <- d
+## adjusting to sample size of only 139
+whole <- d[d$corrected_effort_units=='true',]
 d <- d[d$subject %in% aligned_subjects,]
 
 ## start with raw data
@@ -111,6 +113,7 @@ whole %>%
   group_by(difficulty, choiceTrial) %>% 
   summarize(ssd_ = mean(ssd), se = sd(ssd) / sqrt(aligned_count)) %>% 
   ggplot(aes(x = choiceTrial, y = ssd_)) + 
+  geom_hline(yintercept = .5, linetype = 'dotted') +
   geom_ribbon(aes(ymin = ssd_ - se, ymax = ssd_ + se, group = difficulty), alpha = .2) + 
   geom_line(aes(linetype = difficulty)) + 
   ylim(0, 1) + 
@@ -131,6 +134,43 @@ whole$ssd <- 1 - whole$selectedRiskyDeck
 
 ggsave('exp3-pypool_choice_time.pdf', height = 5.5, width = 7.5)
 ```
+```{r}
+mturk <- read.csv('../../../../exp3/data/dstCleanChoice.csv')
+mturk <- mturk[, c('subject', 'choiceTrial', 'difficulty', 'selectedRiskyDeck')]
+lehigh <- whole[, c('subject', 'choiceTrial', 'difficulty', 'ssd')]
+mturk$experiment <- 'Mechanical Turk'
+lehigh$experiment <- 'Undergraduate'
+mturk$ssd <- 1 - mturk$selectedRiskyDeck
+mturk <- select(mturk, -selectedRiskyDeck)
+cross <- rbind(mturk, lehigh)
+
+cross %>% 
+  group_by(experiment, choiceTrial, difficulty) %>% 
+  summarize(ssd_ = mean(ssd), se = sd(ssd) / sqrt(160)) %>% 
+  ggplot(aes(x = choiceTrial, y = ssd_)) + 
+  geom_hline(yintercept = .5, linetype = 'dotted')  + 
+  geom_ribbon(aes(ymin = ssd_ - se, ymax = ssd_ + se, group = difficulty, fill = difficulty), alpha = .3) +  
+  geom_line(aes(linetype = difficulty, group = difficulty, color = difficulty)) + 
+  labs(x = 'Trial',
+       y = 'Proportion Selection Safe Deck',
+       linetype = 'Direction',
+       fill = 'Direction',
+       color = 'Direction') + 
+  ylim(0, 1) + 
+  facet_wrap(~experiment) + 
+  theme_bw() + 
+  scale_fill_manual(values = c(`Easier than Reference` = '#4DBBD5FF', `Harder than Reference` = '#E64B35FF')) + 
+  scale_color_manual(values = c(`Easier than Reference` = '#4DBBD5FF', `Harder than Reference` = '#E64B35FF')) + 
+  theme(strip.background = element_rect(color = 'black', fill = 'white'),
+        legend.position = c(.85,.85),
+        panel.grid = element_blank(),
+        axis.ticks = element_blank(),
+        text = element_text(size = 18))
+
+ggsave('learning_effects.png', height = 720/96, width = 1280/96, dpi = 96, units = 'in')
+```
+
+
 
 ```{r}
 whole$difficulty_dummy <- ifelse(whole$difficulty == 'Harder than Reference', 1, 0)
